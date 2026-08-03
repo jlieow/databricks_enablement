@@ -1,0 +1,645 @@
+{
+  "datasets": [
+    {
+      "name": "perf",
+      "displayName": "Client performance (master)",
+      "queryLines": [
+        "SELECT * FROM enablement.04_gold.gold_all_clients_master_filtered"
+      ]
+    },
+    {
+      "name": "perf_daily",
+      "displayName": "Daily totals",
+      "queryLines": [
+        "SELECT report_date, client_id, platform, SUM(impressions) AS impressions, SUM(clicks) AS clicks, SUM(conversions) AS conversions, SUM(spend_usd) AS spend_usd FROM enablement.04_gold.gold_all_clients_master_filtered GROUP BY report_date, client_id, platform"
+      ]
+    },
+    {
+      "name": "perf_campaign",
+      "displayName": "Campaign efficiency",
+      "queryLines": [
+        "SELECT client_id, platform, campaign_name, SUM(impressions) AS impressions, SUM(clicks) AS clicks, SUM(conversions) AS conversions, ROUND(SUM(spend_usd), 2) AS spend_usd,       ROUND(SUM(clicks) * 100.0 / NULLIF(SUM(impressions), 0), 3) AS ctr_pct,       ROUND(SUM(spend_usd) / NULLIF(SUM(conversions), 0), 2) AS cpa_usd FROM enablement.04_gold.gold_all_clients_master_filtered GROUP BY client_id, platform, campaign_name"
+      ]
+    },
+    {
+      "name": "dq",
+      "displayName": "Data quality status",
+      "queryLines": [
+        "SELECT dq_status, dq_flags, COUNT(*) AS rows FROM enablement.03_silver.silver_northwind_retail_performance GROUP BY dq_status, dq_flags"
+      ]
+    },
+    {
+      "name": "dq_flagged",
+      "displayName": "Flagged rows for review",
+      "queryLines": [
+        "SELECT report_date, platform, campaign_id, campaign_name, impressions, clicks, spend, conversions, dq_flags FROM enablement.03_silver.silver_northwind_retail_performance WHERE dq_status = 'flagged'"
+      ]
+    },
+    {
+      "name": "cost",
+      "displayName": "Cost per client",
+      "queryLines": [
+        "SELECT client, category, dbus, estimated_usd, projected_monthly_usd FROM enablement.05_ops.cost_per_client"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "performance",
+      "displayName": "Performance",
+      "layout": [
+        {
+          "widget": {
+            "name": "t_hdr",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Client Performance\n",
+                "Consolidated daily advertising performance. Spend shown in USD for cross-client comparison. Only rows that passed data quality validation are included."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "c_spend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "perf",
+                  "fields": [
+                    {
+                      "name": "spend_usd",
+                      "expression": "SUM(`spend_usd`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "spend_usd",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Total Spend (USD)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "c_imps",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "perf",
+                  "fields": [
+                    {
+                      "name": "impressions",
+                      "expression": "SUM(`impressions`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "impressions",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Impressions"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "c_clicks",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "perf",
+                  "fields": [
+                    {
+                      "name": "clicks",
+                      "expression": "SUM(`clicks`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "clicks",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Clicks"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "c_convs",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "perf",
+                  "fields": [
+                    {
+                      "name": "conversions",
+                      "expression": "SUM(`conversions`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "conversions",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Conversions"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "c_ctr",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "perf",
+                  "fields": [
+                    {
+                      "name": "ctr",
+                      "expression": "SUM(`clicks`) * 100.0 / NULLIF(SUM(`impressions`), 0)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "ctr",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 3
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "CTR %"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "c_cpa",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "perf",
+                  "fields": [
+                    {
+                      "name": "cpa",
+                      "expression": "SUM(`spend_usd`) / NULLIF(SUM(`conversions`), 0)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "cpa",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "CPA (USD)"
+              }
+            }
+          },
+          "position": {
+            "x": 10,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "ch_daily_spend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "perf_daily",
+                  "fields": [
+                    {
+                      "name": "report_date",
+                      "expression": "`report_date`"
+                    },
+                    {
+                      "name": "spend_usd",
+                      "expression": "SUM(`spend_usd`)"
+                    },
+                    {
+                      "name": "platform",
+                      "expression": "`platform`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "report_date",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Date"
+                },
+                "y": {
+                  "fieldName": "spend_usd",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Spend (USD)"
+                },
+                "color": {
+                  "fieldName": "platform",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Platform"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Daily spend by platform"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 8,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "ch_platform",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "perf",
+                  "fields": [
+                    {
+                      "name": "platform",
+                      "expression": "`platform`"
+                    },
+                    {
+                      "name": "spend_usd",
+                      "expression": "SUM(`spend_usd`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "platform",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Platform"
+                },
+                "y": {
+                  "fieldName": "spend_usd",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Spend (USD)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Spend by platform"
+              },
+              "mark": {
+                "layout": "group"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 5,
+            "width": 4,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "ch_scatter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "perf_campaign",
+                  "fields": [
+                    {
+                      "name": "spend_usd",
+                      "expression": "`spend_usd`"
+                    },
+                    {
+                      "name": "cpa_usd",
+                      "expression": "`cpa_usd`"
+                    },
+                    {
+                      "name": "platform",
+                      "expression": "`platform`"
+                    },
+                    {
+                      "name": "campaign_name",
+                      "expression": "`campaign_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "scatter",
+              "encodings": {
+                "x": {
+                  "fieldName": "spend_usd",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Spend (USD)"
+                },
+                "y": {
+                  "fieldName": "cpa_usd",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "CPA (USD)"
+                },
+                "color": {
+                  "fieldName": "platform",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Platform"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Spend vs efficiency: high spend with high CPA is the problem quadrant"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 12,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "cost",
+      "displayName": "Cost",
+      "layout": [
+        {
+          "widget": {
+            "name": "t_cost",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Cost Visibility\n",
+                "Built from `system.billing.usage`, which Unity Catalog exposes as an ordinary table. **Check the `untagged` row first:** cost can only be split by client if every job run carries a `client` tag, and tags cannot be applied retrospectively. Populated by notebook 07."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "ch_cost",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "cost",
+                  "fields": [
+                    {
+                      "name": "client",
+                      "expression": "`client`"
+                    },
+                    {
+                      "name": "estimated_usd",
+                      "expression": "SUM(`estimated_usd`)"
+                    },
+                    {
+                      "name": "category",
+                      "expression": "`category`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "client",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Client"
+                },
+                "y": {
+                  "fieldName": "estimated_usd",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Estimated USD"
+                },
+                "color": {
+                  "fieldName": "category",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Category"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Cost by client and category"
+              },
+              "mark": {
+                "layout": "stack"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 12,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}
