@@ -1,0 +1,15 @@
+row_id,report_date,client_id,tactic,campaign_id,campaign_name,impressions,engagements,leads
+oi-pl-00086,2026-07-01,orbital_instruments,product_listing,OI3041,OI_Spectrometer_Listing,4088,293,15
+oi-pl-00087,2026-07-02,orbital_instruments,product_listing,OI3041,OI_Spectrometer_Listing,2833,217,12
+oi-pl-00088,2026-07-03,orbital_instruments,product_listing,OI3041,OI_Spectrometer_Listing,7728,567,16
+oi-pl-00089,2026-07-04,orbital_instruments,product_listing,OI3041,OI_Spectrometer_Listing,5373,322,18
+oi-pl-00090,2026-07-05,orbital_instruments,product_listing,OI3041,OI_Spectrometer_Listing,7894,375,21
+oi-pl-00091,2026-07-06,orbital_instruments,product_listing,OI3041,OI_Spectrometer_Listing,4589,145,4
+oi-pl-00092,2026-07-07,orbital_instruments,product_listing,OI3041,OI_Spectrometer_Listing,6032,281,5
+oi-pl-00093,2026-07-01,orbital_instruments,product_listing,OI3042,OI_Microscope_Listing,3923,144,5
+oi-pl-00094,2026-07-02,orbital_instruments,product_listing,OI3042,OI_Microscope_Listing,3406,264,14
+oi-pl-00095,2026-07-03,orbital_instruments,product_listing,OI3042,OI_Microscope_Listing,7971,589,15
+oi-pl-00096,2026-07-04,orbital_instruments,product_listing,OI3042,OI_Microscope_Listing,5000,259,9
+oi-pl-00097,2026-07-05,orbital_instruments,product_listing,OI3042,OI_Microscope_Listing,7733,602,22
+oi-pl-00098,2026-07-06,orbital_instruments,product_listing,OI3042,OI_Microscope_Listing,5429,385,18
+oi-pl-00099,2026-07-07,orbital_instruments,product_listing,OI3042,OI_Microscope_Listing,6738,538,26

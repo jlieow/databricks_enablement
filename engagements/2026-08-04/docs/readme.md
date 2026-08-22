@@ -15,7 +15,7 @@ order and the gotchas worth knowing. Read that first.
 
 | Guide | For |
 | --- | --- |
-| `prework.md` | Everyone, before the session. About ten minutes |
+| [`../../../shared/prework.md`](../../../shared/prework.md) | Everyone, before the session. About ten minutes. Shared across engagements |
 | `lakeflow_designer_guide.md` | Agenda item 9: building the silver-to-gold transformation visually, no code |
 | `genie_space_guide.md` | Agenda item 8: building the Genie space in the UI, and benchmarking its answers |
 

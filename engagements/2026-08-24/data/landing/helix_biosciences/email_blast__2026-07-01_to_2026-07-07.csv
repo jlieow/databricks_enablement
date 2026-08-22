@@ -1,0 +1,15 @@
+row_id,report_date,client_id,tactic,campaign_id,campaign_name,impressions,engagements,leads
+hx-em-00030,2026-07-01,helix_biosciences,email_blast,HX5011,HX_LabWeekly_Email,18861,4452,91
+hx-em-00031,2026-07-02,helix_biosciences,email_blast,HX5011,HX_LabWeekly_Email,17058,3840,64
+hx-em-00032,2026-07-03,helix_biosciences,email_blast,HX5011,HX_LabWeekly_Email,19163,4078,90
+hx-em-00033,2026-07-04,helix_biosciences,email_blast,HX5011,HX_LabWeekly_Email,17123,4641,90
+hx-em-00034,2026-07-05,helix_biosciences,email_blast,HX5011,HX_LabWeekly_Email,12165,3010,87
+hx-em-00035,2026-07-06,helix_biosciences,email_blast,HX5011,HX_LabWeekly_Email,24032,3605,56
+hx-em-00036,2026-07-07,helix_biosciences,email_blast,HX5011,HX_LabWeekly_Email,23028,6343,186
+hx-em-00037,2026-07-01,helix_biosciences,email_blast,HX5012,HX_NewProduct_Email,16512,3706,71
+hx-em-00038,2026-07-02,helix_biosciences,email_blast,HX5012,HX_NewProduct_Email,8654,1946,25
+hx-em-00039,2026-07-03,helix_biosciences,email_blast,HX5012,HX_NewProduct_Email,13846,3545,52
+hx-em-00040,2026-07-04,helix_biosciences,email_blast,HX5012,HX_NewProduct_Email,20928,3720,39
+hx-em-00041,2026-07-05,helix_biosciences,email_blast,HX5012,HX_NewProduct_Email,23633,3928,76
+hx-em-00042,2026-07-06,helix_biosciences,email_blast,HX5012,HX_NewProduct_Email,17945,3207,59
+hx-em-00043,2026-07-07,helix_biosciences,email_blast,HX5012,HX_NewProduct_Email,12327,2943,68

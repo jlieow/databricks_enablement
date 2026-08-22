@@ -1,0 +1,15 @@
+row_id,report_date,client_id,tactic,campaign_id,campaign_name,impressions,engagements,leads
+hx-wb-00058,2026-07-01,helix_biosciences,webinar,HX7001,HX_AssayMethods_Webinar,1989,764,160
+hx-wb-00059,2026-07-02,helix_biosciences,webinar,HX7001,HX_AssayMethods_Webinar,1000,278,41
+hx-wb-00060,2026-07-03,helix_biosciences,webinar,HX7001,HX_AssayMethods_Webinar,1723,683,114
+hx-wb-00061,2026-07-04,helix_biosciences,webinar,HX7001,HX_AssayMethods_Webinar,1879,723,138
+hx-wb-00062,2026-07-05,helix_biosciences,webinar,HX7001,HX_AssayMethods_Webinar,663,208,23
+hx-wb-00063,2026-07-06,helix_biosciences,webinar,HX7001,HX_AssayMethods_Webinar,1523,326,32
+hx-wb-00064,2026-07-07,helix_biosciences,webinar,HX7001,HX_AssayMethods_Webinar,1446,375,87
+hx-wb-00065,2026-07-01,helix_biosciences,webinar,HX7002,HX_LabAutomation_Webinar,1563,537,68
+hx-wb-00066,2026-07-02,helix_biosciences,webinar,HX7002,HX_LabAutomation_Webinar,545,152,18
+hx-wb-00067,2026-07-03,helix_biosciences,webinar,HX7002,HX_LabAutomation_Webinar,547,129,24
+hx-wb-00068,2026-07-04,helix_biosciences,webinar,HX7002,HX_LabAutomation_Webinar,795,244,35
+hx-wb-00069,2026-07-05,helix_biosciences,webinar,HX7002,HX_LabAutomation_Webinar,679,169,36
+hx-wb-00070,2026-07-06,helix_biosciences,webinar,HX7002,HX_LabAutomation_Webinar,1932,541,81
+hx-wb-00071,2026-07-07,helix_biosciences,webinar,HX7002,HX_LabAutomation_Webinar,563,113,28

@@ -1,0 +1,3 @@
+row_id,report_date,client_id,tactic,campaign_id,campaign_name,impressions,engagements,leads
+oi-wb-00142,2026-07-15,orbital_instruments,webinar,OI7021,OI_ImagingTech_Webinar,973,367,71
+oi-wb-00143,2026-07-16,orbital_instruments,webinar,OI7021,OI_ImagingTech_Webinar,1530,541,122

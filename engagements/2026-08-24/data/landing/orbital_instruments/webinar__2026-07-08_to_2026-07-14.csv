@@ -1,0 +1,8 @@
+row_id,report_date,client_id,tactic,campaign_id,campaign_name,impressions,engagements,leads
+oi-wb-00135,2026-07-08,orbital_instruments,webinar,OI7021,OI_ImagingTech_Webinar,1347,453,46
+oi-wb-00136,2026-07-09,orbital_instruments,webinar,OI7021,OI_ImagingTech_Webinar,1132,335,51
+oi-wb-00137,2026-07-10,orbital_instruments,webinar,OI7021,OI_ImagingTech_Webinar,1131,444,53
+oi-wb-00138,2026-07-11,orbital_instruments,webinar,OI7021,OI_ImagingTech_Webinar,994,203,24
+oi-wb-00139,2026-07-12,orbital_instruments,webinar,OI7021,OI_ImagingTech_Webinar,849,287,48
+oi-wb-00140,2026-07-13,orbital_instruments,webinar,OI7021,OI_ImagingTech_Webinar,1021,270,58
+oi-wb-00141,2026-07-14,orbital_instruments,webinar,OI7021,OI_ImagingTech_Webinar,1718,514,123

@@ -1,0 +1,15 @@
+row_id,report_date,client_id,tactic,campaign_id,campaign_name,impressions,engagements,leads
+hx-pl-00016,2026-07-08,helix_biosciences,product_listing,HX3021,HX_ProteinAssay_Listing,6135,233,7
+hx-pl-00017,2026-07-09,helix_biosciences,product_listing,HX3021,HX_ProteinAssay_Listing,4222,264,15
+hx-pl-00018,2026-07-10,helix_biosciences,product_listing,HX3021,HX_ProteinAssay_Listing,4080,247,5
+hx-pl-00019,2026-07-11,helix_biosciences,product_listing,HX3021,HX_ProteinAssay_Listing,5606,376,20
+hx-pl-00020,2026-07-12,helix_biosciences,product_listing,HX3021,HX_ProteinAssay_Listing,4330,257,5
+hx-pl-00021,2026-07-13,helix_biosciences,product_listing,HX3021,HX_ProteinAssay_Listing,7165,227,10
+hx-pl-00022,2026-07-14,helix_biosciences,product_listing,HX3021,HX_ProteinAssay_Listing,2415,91,4
+hx-pl-00023,2026-07-08,helix_biosciences,product_listing,HX3022,HX_CellCulture_Listing,7438,385,18
+hx-pl-00024,2026-07-09,helix_biosciences,product_listing,HX3022,HX_CellCulture_Listing,5239,311,8
+hx-pl-00025,2026-07-10,helix_biosciences,product_listing,HX3022,HX_CellCulture_Listing,4854,352,15
+hx-pl-00026,2026-07-11,helix_biosciences,product_listing,HX3022,HX_CellCulture_Listing,7028,341,8
+hx-pl-00027,2026-07-12,helix_biosciences,product_listing,HX3022,HX_CellCulture_Listing,5514,337,11
+hx-pl-00028,2026-07-13,helix_biosciences,product_listing,HX3022,HX_CellCulture_Listing,5574,241,7
+hx-pl-00029,2026-07-14,helix_biosciences,product_listing,HX3022,HX_CellCulture_Listing,3387,224,10

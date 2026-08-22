@@ -1,0 +1,718 @@
+{
+  "datasets": [
+    {
+      "name": "perf",
+      "displayName": "Campaign engagement (master)",
+      "queryLines": [
+        "SELECT * FROM enablement.04_gold.gold_all_clients_master"
+      ]
+    },
+    {
+      "name": "perf_daily",
+      "displayName": "Daily totals",
+      "queryLines": [
+        "SELECT report_date, client_id, tactic, SUM(impressions) AS impressions, SUM(engagements) AS engagements, SUM(leads) AS leads FROM enablement.04_gold.gold_all_clients_master GROUP BY report_date, client_id, tactic"
+      ]
+    },
+    {
+      "name": "perf_campaign",
+      "displayName": "Campaign efficiency",
+      "queryLines": [
+        "SELECT client_id, tactic, campaign_name, SUM(impressions) AS impressions, SUM(engagements) AS engagements, SUM(leads) AS leads,       ROUND(SUM(engagements) * 100.0 / NULLIF(SUM(impressions), 0), 3) AS engagement_rate_pct,       ROUND(SUM(leads) * 100.0 / NULLIF(SUM(engagements), 0), 3) AS lead_rate_pct FROM enablement.04_gold.gold_all_clients_master GROUP BY client_id, tactic, campaign_name"
+      ]
+    },
+    {
+      "name": "dq",
+      "displayName": "Data quality status",
+      "queryLines": [
+        "SELECT dq_status, dq_flags, COUNT(*) AS rows FROM enablement.03_silver.silver_helix_biosciences_engagement GROUP BY dq_status, dq_flags"
+      ]
+    },
+    {
+      "name": "dq_flagged",
+      "displayName": "Flagged rows for review",
+      "queryLines": [
+        "SELECT report_date, tactic, campaign_id, campaign_name, impressions, engagements, leads, dq_flags FROM enablement.03_silver.silver_helix_biosciences_engagement WHERE dq_status = 'flagged'"
+      ]
+    },
+    {
+      "name": "cost",
+      "displayName": "Cost per client",
+      "queryLines": [
+        "SELECT client, category, dbus, estimated_usd, projected_monthly_usd FROM enablement.05_ops.cost_per_client"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "performance",
+      "displayName": "Performance",
+      "layout": [
+        {
+          "widget": {
+            "name": "t_hdr",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Campaign Engagement\n",
+                "Consolidated daily campaign engagement across tactics. Only rows that passed data quality validation are included. This is the internal report delivered about a client campaign."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "c_imps",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "perf",
+                  "fields": [
+                    {
+                      "name": "impressions",
+                      "expression": "SUM(`impressions`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "impressions",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Impressions"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "c_eng",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "perf",
+                  "fields": [
+                    {
+                      "name": "engagements",
+                      "expression": "SUM(`engagements`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "engagements",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Engagements"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "c_leads",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "perf",
+                  "fields": [
+                    {
+                      "name": "leads",
+                      "expression": "SUM(`leads`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "leads",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Leads"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "c_eng_rate",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "perf",
+                  "fields": [
+                    {
+                      "name": "engagement_rate",
+                      "expression": "SUM(`engagements`) * 100.0 / NULLIF(SUM(`impressions`), 0)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "engagement_rate",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Engagement Rate %"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "ch_daily_eng",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "perf_daily",
+                  "fields": [
+                    {
+                      "name": "report_date",
+                      "expression": "`report_date`"
+                    },
+                    {
+                      "name": "engagements",
+                      "expression": "SUM(`engagements`)"
+                    },
+                    {
+                      "name": "tactic",
+                      "expression": "`tactic`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "report_date",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Date"
+                },
+                "y": {
+                  "fieldName": "engagements",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Engagements"
+                },
+                "color": {
+                  "fieldName": "tactic",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Tactic"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Daily engagements by tactic"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 8,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "ch_tactic",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "perf",
+                  "fields": [
+                    {
+                      "name": "tactic",
+                      "expression": "`tactic`"
+                    },
+                    {
+                      "name": "leads",
+                      "expression": "SUM(`leads`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "tactic",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Tactic"
+                },
+                "y": {
+                  "fieldName": "leads",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Leads"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Leads by tactic"
+              },
+              "mark": {
+                "layout": "group"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 5,
+            "width": 4,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "ch_scatter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "perf_campaign",
+                  "fields": [
+                    {
+                      "name": "engagements",
+                      "expression": "`engagements`"
+                    },
+                    {
+                      "name": "lead_rate_pct",
+                      "expression": "`lead_rate_pct`"
+                    },
+                    {
+                      "name": "tactic",
+                      "expression": "`tactic`"
+                    },
+                    {
+                      "name": "campaign_name",
+                      "expression": "`campaign_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "scatter",
+              "encodings": {
+                "x": {
+                  "fieldName": "engagements",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Engagements"
+                },
+                "y": {
+                  "fieldName": "lead_rate_pct",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Lead rate %"
+                },
+                "color": {
+                  "fieldName": "tactic",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Tactic"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Volume vs efficiency: high engagement with low lead rate is where to look"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 12,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "data_quality",
+      "displayName": "Data Quality",
+      "layout": [
+        {
+          "widget": {
+            "name": "t_dq",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Data Quality\n",
+                "Rows are **marked, not dropped** in silver, so nothing is quietly lost. Valid rows flow to gold and the report; flagged rows stay here as a review queue. Reads the Helix silver table."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "ch_dq",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "dq",
+                  "fields": [
+                    {
+                      "name": "dq_status",
+                      "expression": "`dq_status`"
+                    },
+                    {
+                      "name": "rows",
+                      "expression": "SUM(`rows`)"
+                    },
+                    {
+                      "name": "dq_flags",
+                      "expression": "`dq_flags`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "dq_status",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Status"
+                },
+                "y": {
+                  "fieldName": "rows",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Rows"
+                },
+                "color": {
+                  "fieldName": "dq_flags",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Flag"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Rows by data quality status"
+              },
+              "mark": {
+                "layout": "stack"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 5,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "tbl_flagged",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "dq_flagged",
+                  "fields": [
+                    {
+                      "name": "report_date",
+                      "expression": "`report_date`"
+                    },
+                    {
+                      "name": "tactic",
+                      "expression": "`tactic`"
+                    },
+                    {
+                      "name": "campaign_id",
+                      "expression": "`campaign_id`"
+                    },
+                    {
+                      "name": "campaign_name",
+                      "expression": "`campaign_name`"
+                    },
+                    {
+                      "name": "impressions",
+                      "expression": "`impressions`"
+                    },
+                    {
+                      "name": "engagements",
+                      "expression": "`engagements`"
+                    },
+                    {
+                      "name": "leads",
+                      "expression": "`leads`"
+                    },
+                    {
+                      "name": "dq_flags",
+                      "expression": "`dq_flags`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {"fieldName": "report_date", "displayName": "Date"},
+                  {"fieldName": "tactic", "displayName": "Tactic"},
+                  {"fieldName": "campaign_id", "displayName": "Campaign ID"},
+                  {"fieldName": "campaign_name", "displayName": "Campaign"},
+                  {"fieldName": "impressions", "displayName": "Impressions"},
+                  {"fieldName": "engagements", "displayName": "Engagements"},
+                  {"fieldName": "leads", "displayName": "Leads"},
+                  {"fieldName": "dq_flags", "displayName": "Flag"}
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Flagged rows for review"
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 2,
+            "width": 7,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "cost",
+      "displayName": "Cost",
+      "layout": [
+        {
+          "widget": {
+            "name": "t_cost",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Cost Visibility\n",
+                "Built from `system.billing.usage`, which Unity Catalog exposes as an ordinary table. **Check the `untagged` row first:** cost can only be split by client if every job run carries a `client` tag, and tags cannot be applied retrospectively. Populated by notebook 06."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "ch_cost",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "cost",
+                  "fields": [
+                    {
+                      "name": "client",
+                      "expression": "`client`"
+                    },
+                    {
+                      "name": "estimated_usd",
+                      "expression": "SUM(`estimated_usd`)"
+                    },
+                    {
+                      "name": "category",
+                      "expression": "`category`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "client",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Client"
+                },
+                "y": {
+                  "fieldName": "estimated_usd",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Estimated USD"
+                },
+                "color": {
+                  "fieldName": "category",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Category"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Cost by client and category"
+              },
+              "mark": {
+                "layout": "stack"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 12,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}

@@ -134,5 +134,5 @@ Three ordering traps:
 
 ## Before the session
 
-`docs/prework.md`. About ten minutes, and the Free Edition account signup needs doing ahead of
+[`../../shared/prework.md`](../../shared/prework.md). About ten minutes, and the Free Edition account signup needs doing ahead of
 time because it cannot be rushed on the day.

@@ -1,0 +1,8 @@
+row_id,report_date,client_id,tactic,campaign_id,campaign_name,impressions,engagements,leads
+oi-em-00121,2026-07-08,orbital_instruments,email_blast,OI5031,OI_ResearchDigest_Email,19160,5074,115
+oi-em-00122,2026-07-09,orbital_instruments,email_blast,OI5031,OI_ResearchDigest_Email,16618,4424,119
+oi-em-00123,2026-07-10,orbital_instruments,email_blast,OI5031,OI_ResearchDigest_Email,20114,5594,163
+oi-em-00124,2026-07-11,orbital_instruments,email_blast,OI5031,OI_ResearchDigest_Email,22939,3902,100
+oi-em-00125,2026-07-12,orbital_instruments,email_blast,OI5031,OI_ResearchDigest_Email,21801,4773,81
+oi-em-00126,2026-07-13,orbital_instruments,email_blast,OI5031,OI_ResearchDigest_Email,14232,3370,65
+oi-em-00127,2026-07-14,orbital_instruments,email_blast,OI5031,OI_ResearchDigest_Email,13115,3152,56
