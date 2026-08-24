@@ -93,6 +93,7 @@ Almost the agenda order, because each notebook reads tables the earlier ones cre
 | 5 | `05_genie_space` | **Optional.** Only if you want the space built for you instead of in the UI |
 | 6 | `06_cost_visibility` | Populates the dashboard's Cost page |
 | 7 | `07_row_level_security` | **Optional worked example.** Reads the consolidated table from 04 |
+| — | `09_lakebase_change_data_feed_sync` | **Optional, standalone.** Provisions a Lakebase database and a change-data-feed-ready table (`REPLICA IDENTITY FULL`) to sync Postgres changes to Delta; no dependency on the catalog or medallion tables |
 
 Ordering traps:
 
