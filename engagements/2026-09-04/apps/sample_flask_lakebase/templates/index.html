@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Patient Risk Scores (Internal Service)</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #2c3e50;
+      }
+
+      .add-todo-section {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+      }
+
+      .add-todo-section h3 {
+        margin-bottom: 15px;
+        color: #2c3e50;
+      }
+
+      .form-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      input[type="text"] {
+        flex: 1;
+        padding: 12px;
+        border: 2px solid #e1e8ed;
+        border-radius: 5px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: #3498db;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+
+      .btn-primary {
+        background-color: #3498db;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background-color: #2980b9;
+      }
+
+      .btn-success {
+        background-color: #27ae60;
+        color: white;
+      }
+
+      .btn-success:hover {
+        background-color: #229954;
+      }
+
+      .btn-danger {
+        background-color: #e74c3c;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background-color: #c0392b;
+      }
+
+      .todos-section {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .todos-section h3 {
+        margin-bottom: 20px;
+        color: #2c3e50;
+      }
+
+      .todo-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #ecf0f1;
+        transition: background-color 0.3s;
+      }
+
+      .todo-item:last-child {
+        border-bottom: none;
+      }
+
+      .todo-item:hover {
+        background-color: #f8f9fa;
+      }
+
+      .todo-text {
+        flex: 1;
+        margin-left: 15px;
+        font-size: 16px;
+      }
+
+      .todo-text.completed {
+        text-decoration: line-through;
+        color: #7f8c8d;
+      }
+
+      .todo-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .btn-small {
+        padding: 8px 12px;
+        font-size: 14px;
+      }
+
+      .empty-state {
+        text-align: center;
+        color: #7f8c8d;
+        font-style: italic;
+        padding: 40px 20px;
+      }
+
+      .flash-messages {
+        margin-bottom: 20px;
+      }
+
+      .flash-message {
+        padding: 12px 20px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+      }
+
+      .flash-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .flash-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Patient Risk Scores (Internal Service)</h1>
+      <p>
+        Read-only view of the latest batch-scored patient risk cohort. The batch
+        pipeline is the only writer; this service reads the serving table and is
+        called by other clinical teams. No live inference runs here.
+      </p>
+
+      <!-- District filter -->
+      <div class="add-todo-section">
+        <h3>Filter by district</h3>
+        <form method="GET" action="{{ url_for('index') }}">
+          <div class="form-group">
+            <select name="district">
+              <option value="">All districts</option>
+              {% for d in districts %}
+              <option value="{{ d }}" {{ 'selected' if d == selected_district else '' }}>
+                {{ d }}
+              </option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">Apply</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Risk scores -->
+      <div class="todos-section">
+        <h3>Scored patients</h3>
+
+        {% if scores %} {% for s in scores %}
+        <div class="todo-item">
+          <span class="todo-text">
+            Patient {{ s[0] }} &middot; {{ s[1] }} &middot;
+            risk {{ '%.2f'|format(s[2]) }} ({{ s[3] }}) &middot;
+            model {{ s[4] }}
+          </span>
+        </div>
+        {% endfor %} {% else %}
+        <div class="empty-state">
+          No risk scores found. Run notebook 07 to batch-score and notebook 08 to
+          populate the serving table.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </body>
+</html>

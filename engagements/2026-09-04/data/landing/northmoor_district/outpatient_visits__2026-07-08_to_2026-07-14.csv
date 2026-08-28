@@ -1,0 +1,15 @@
+encounter_id,visit_date,district_id,stream,patient_id,patient_age,primary_diagnosis,visit_duration_mins,severity_score,follow_up_required
+100015,2026-07-08,northmoor_district,outpatient_visits,1115,41,E11,26,2,Y
+100016,2026-07-08,northmoor_district,outpatient_visits,1116,55,I10,22,1,N
+100017,2026-07-09,northmoor_district,outpatient_visits,1117,68,K21,25,2,N
+100018,2026-07-09,northmoor_district,outpatient_visits,1118,47,J44,21,1,N
+100019,2026-07-10,northmoor_district,outpatient_visits,1119,62,I50,28,3,Y
+100020,2026-07-10,northmoor_district,outpatient_visits,1120,38,N18,20,1,N
+100021,2026-07-11,northmoor_district,outpatient_visits,1121,54,E10,24,2,Y
+100022,2026-07-11,northmoor_district,outpatient_visits,1122,49,M79,23,1,N
+100023,2026-07-12,northmoor_district,outpatient_visits,1123,59,I10,26,2,N
+100024,2026-07-12,northmoor_district,outpatient_visits,1124,52,K72,19,1,N
+100025,2026-07-13,northmoor_district,outpatient_visits,1125,66,E11,29,2,Y
+100026,2026-07-13,northmoor_district,outpatient_visits,1126,44,J44,22,1,N
+100027,2026-07-14,northmoor_district,outpatient_visits,1127,71,I50,27,3,Y
+100028,2026-07-14,northmoor_district,outpatient_visits,1128,53,K21,21,1,N

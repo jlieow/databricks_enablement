@@ -12,6 +12,7 @@ Engagements are named by session date.
 | --- | --- | --- |
 | [`engagements/2026-08-04/`](engagements/2026-08-04/) | Client (ad-spend) data consolidation for a marketing agency: Auto Loader → medallion → RLS → cost → Genie → dashboard | Complete |
 | [`engagements/2026-08-24/`](engagements/2026-08-24/) | Scientific publisher: connector-based ingestion (CSV upload + Google Drive connector) → medallion → internal campaign-engagement report on AI/BI dashboard + Genie, with cost readout and a governance foundation | Complete |
+| [`engagements/2026-09-04/`](engagements/2026-09-04/) | Health authority: patient encounter medallion platform (outpatient visits, inpatient admissions, lab results) with classical risk-stratification model, clinical-note extraction, academic literature retrieval agent, batch serving to PostgreSQL, Genie, dashboards | Complete |
 
 Start with each engagement's `AGENDA.md`, which maps agenda items to files and covers setup,
 running order and the gotchas.

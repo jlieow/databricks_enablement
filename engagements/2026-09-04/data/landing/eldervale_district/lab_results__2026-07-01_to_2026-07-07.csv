@@ -1,0 +1,8 @@
+encounter_id,test_date,district_id,stream,patient_id,test_code,result_value,normal_range_low,normal_range_high,result_status
+300101,2026-07-01,eldervale_district,lab_results,2301,HGB,14.0,12.0,17.5,normal
+300102,2026-07-02,eldervale_district,lab_results,2302,WBC,7.3,4.5,11.0,normal
+300103,2026-07-03,eldervale_district,lab_results,2303,GLU,95,70,100,normal
+300104,2026-07-04,eldervale_district,lab_results,2304,CRE,1.0,0.7,1.3,normal
+300105,2026-07-05,eldervale_district,lab_results,2305,NA,137,135,145,normal
+300106,2026-07-06,eldervale_district,lab_results,2306,K,4.1,3.5,5.0,normal
+300107,2026-07-07,eldervale_district,lab_results,2307,BUN,19,7,20,normal

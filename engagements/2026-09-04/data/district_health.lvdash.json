@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "displayName": "District Health Analytics",
+  "definition": {
+    "pages": [
+      {
+        "name": "Clinical Metrics",
+        "displayName": "Clinical Metrics by District",
+        "layout": [
+          {
+            "position": {"x": 0, "y": 0, "width": 6, "height": 4},
+            "widget": {
+              "name": "Encounters by District",
+              "query": "SELECT district_id, SUM(encounter_count) as total_encounters FROM enablement.04_gold.gold_all_districts_master GROUP BY district_id ORDER BY district_id"
+            }
+          },
+          {
+            "position": {"x": 6, "y": 0, "width": 6, "height": 4},
+            "widget": {
+              "name": "Average Length of Stay",
+              "query": "SELECT district_id, AVG(avg_length_of_stay) as avg_los FROM enablement.04_gold.gold_all_districts_master WHERE avg_length_of_stay > 0 GROUP BY district_id ORDER BY district_id"
+            }
+          },
+          {
+            "position": {"x": 0, "y": 4, "width": 6, "height": 4},
+            "widget": {
+              "name": "Readmission Rate",
+              "query": "SELECT district_id, SUM(readmission_count)/SUM(total_encounters)*100 as readmission_rate_pct FROM enablement.04_gold.gold_all_districts_master GROUP BY district_id ORDER BY district_id"
+            }
+          },
+          {
+            "position": {"x": 6, "y": 4, "width": 6, "height": 4},
+            "widget": {
+              "name": "Data Quality: Flagged Rows",
+              "query": "SELECT district_id, dq_status, COUNT(*) as row_count FROM enablement.03_silver.silver_northmoor_district_encounters UNION ALL SELECT district_id, dq_status, COUNT(*) FROM enablement.03_silver.silver_eldervale_district_encounters GROUP BY district_id, dq_status ORDER BY district_id, dq_status"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Data Quality",
+        "displayName": "Data Quality Validation Results",
+        "layout": [
+          {
+            "position": {"x": 0, "y": 0, "width": 12, "height": 6},
+            "widget": {
+              "name": "Quality Flags by Type",
+              "query": "SELECT dq_flags, COUNT(*) as flagged_rows FROM (SELECT * FROM enablement.03_silver.silver_northmoor_district_encounters WHERE dq_status = 'flagged' UNION ALL SELECT * FROM enablement.03_silver.silver_eldervale_district_encounters WHERE dq_status = 'flagged') GROUP BY dq_flags ORDER BY flagged_rows DESC"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+encounter_id,test_date,district_id,stream,patient_id,test_code,result_value,normal_range_low,normal_range_high,result_status
+300001,2026-07-01,northmoor_district,lab_results,1301,HGB,14.2,12.0,17.5,normal
+300002,2026-07-01,northmoor_district,lab_results,1302,WBC,7.1,4.5,11.0,normal
+300003,2026-07-02,northmoor_district,lab_results,1303,GLU,98,70,100,normal
+300004,2026-07-02,northmoor_district,lab_results,1304,CRE,1.1,0.7,1.3,normal
+300005,2026-07-03,northmoor_district,lab_results,1305,NA,138,135,145,normal
+300006,2026-07-03,northmoor_district,lab_results,1305,NA,138,135,145,normal
+300007,2026-07-04,northmoor_district,lab_results,1307,K,4.2,3.5,5.0,normal
+300008,2026-07-04,northmoor_district,lab_results,1308,HGB,9.8,12.0,17.5,abnormal
+300009,2026-07-05,northmoor_district,lab_results,1309,WBC,15.3,4.5,11.0,abnormal
+300010,2026-07-05,northmoor_district,lab_results,1310,GLU,245,70,100,abnormal
+300011,2026-07-06,northmoor_district,lab_results,1311,CRE,2.8,0.7,1.3,abnormal
+300012,2026-07-06,northmoor_district,lab_results,1312,BUN,32,7,20,abnormal
+300013,2026-07-07,northmoor_district,lab_results,1313,NA,142,135,145,normal
+300014,2026-07-07,northmoor_district,lab_results,1314,K,3.2,3.5,5.0,abnormal

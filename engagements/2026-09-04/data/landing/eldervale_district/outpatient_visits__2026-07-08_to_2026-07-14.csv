@@ -1,0 +1,8 @@
+encounter_id,visit_date,district_id,stream,patient_id,patient_age,primary_diagnosis,visit_duration_mins,severity_score,follow_up_required
+100108,2026-07-08,eldervale_district,outpatient_visits,2108,60,E11,25,2,Y
+100109,2026-07-09,eldervale_district,outpatient_visits,2109,48,I10,21,1,N
+100110,2026-07-10,eldervale_district,outpatient_visits,2110,72,K21,28,2,N
+100111,2026-07-11,eldervale_district,outpatient_visits,2111,43,J44,23,1,Y
+100112,2026-07-12,eldervale_district,outpatient_visits,2112,57,I50,26,3,N
+100113,2026-07-13,eldervale_district,outpatient_visits,2113,52,E10,20,1,N
+100114,2026-07-14,eldervale_district,outpatient_visits,2114,69,N18,29,2,Y

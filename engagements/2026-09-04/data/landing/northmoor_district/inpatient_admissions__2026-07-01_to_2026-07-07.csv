@@ -1,0 +1,15 @@
+encounter_id,admission_date,district_id,stream,patient_id,length_of_stay_days,primary_diagnosis,admission_status,readmission_count,total_encounters
+200001,2026-07-01,northmoor_district,inpatient_admissions,1201,3,I21,Active,0,1
+200002,2026-07-01,northmoor_district,inpatient_admissions,1202,5,I50,active,1,3
+200003,2026-07-02,northmoor_district,inpatient_admissions,1203,2,K72,ACTIVE,0,1
+200004,2026-07-02,northmoor_district,inpatient_admissions,1204,-1,E11,Active,0,1
+200005,2026-07-03,northmoor_district,inpatient_admissions,1205,4,J44,active,2,8
+200006,2026-07-03,northmoor_district,inpatient_admissions,1206,1,N18,Active,0,1
+200007,2026-07-04,northmoor_district,inpatient_admissions,1207,6,I10,active,1,2
+200008,2026-07-04,northmoor_district,inpatient_admissions,1208,3,E11,Active,0,1
+200009,2026-07-05,northmoor_district,inpatient_admissions,1209,2,K21,active,0,1
+200010,2026-07-05,northmoor_district,inpatient_admissions,1210,7,I50,Active,2,5
+200011,2026-07-06,northmoor_district,inpatient_admissions,1211,4,J44,active,1,3
+200012,2026-07-06,northmoor_district,inpatient_admissions,1212,5,I21,Active,0,2
+200013,2026-07-07,northmoor_district,inpatient_admissions,1213,1,E11,active,0,1
+200014,2026-07-07,northmoor_district,inpatient_admissions,1214,3,K72,Active,1,2
