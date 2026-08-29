@@ -3,37 +3,59 @@
 # MAGIC # 08. Optional: serve the champion model on a real-time endpoint
 # MAGIC
 # MAGIC **This is an optional capability, not this build's serving pattern.** The build serves scores in
-# MAGIC batch: notebook 07 batch-scores with the `@champion` model, notebook 09 writes the results to
+# MAGIC batch: notebook 07 batch-scores with the `@champion` model, notebook 12 writes the results to
 # MAGIC PostgreSQL, and the app reads them. Nothing calls the model at request time.
 # MAGIC
 # MAGIC This notebook is here for the case where you later need low-latency, request-time scoring, for
 # MAGIC example a clinician tool that scores a single patient on demand. It deploys the same
-# MAGIC `@champion` version that notebook 07 promoted to a Databricks Model Serving endpoint and sends it
-# MAGIC a test request. Deploying the same aliased version keeps batch and real-time on one model, so
-# MAGIC there is never a batch model and a separate serving model to keep in step.
+# MAGIC `@champion` version that notebook 07 promoted to a Databricks Model Serving endpoint. Deploying the
+# MAGIC same aliased version keeps batch and real-time on one model, so there is never a batch model and a
+# MAGIC separate serving model to keep in step. **Notebook 09 then queries this endpoint** and shows the
+# MAGIC captured requests, the same way notebooks 10 and 11 build and query the agent endpoint.
 # MAGIC
 # MAGIC ### What this notebook does
 # MAGIC 1. Resolves the version the `champion` alias points at
 # MAGIC 2. Creates or updates a Model Serving endpoint that serves that version, with scale-to-zero and
 # MAGIC    an inference table that captures every request and response
 # MAGIC 3. Waits for the endpoint to be ready
-# MAGIC 4. Sends a test scoring request and reads the response
-# MAGIC 5. Shows where the captured requests land in Unity Catalog
+# MAGIC
+# MAGIC Querying it and reading the inference table is notebook 09.
 # MAGIC
 # MAGIC ### Inference table: capture in Unity Catalog
-# MAGIC The endpoint is created with `auto_capture_config`, which logs every request and response to a
-# MAGIC governed Delta table in Unity Catalog (an *inference table*). For a clinical, regulated build
-# MAGIC this is the audit trail of what the model was asked and what it answered, and it is the source
-# MAGIC the drift and calibration monitoring in notebook 07 reads from: those queries have nothing to
-# MAGIC read until capture is on. We enable it here so serving and monitoring join up. (For a plain
-# MAGIC tabular classifier this request/response capture is the right-sized choice; richer MLflow span
-# MAGIC tracing is aimed at agent and large language model endpoints, not a Random Forest.)
+# MAGIC The endpoint is created with an **AI Gateway inference table**, which logs every request and
+# MAGIC response to a governed Delta table in Unity Catalog. For a clinical, regulated build this is the
+# MAGIC audit trail of what the model was asked and what it answered, and it is the source the drift and
+# MAGIC calibration monitoring in notebook 07 reads from: those queries have nothing to read until
+# MAGIC capture is on. We enable it here so serving and monitoring join up. (For a plain tabular
+# MAGIC classifier this request/response capture is the right-sized choice; richer MLflow span tracing is
+# MAGIC aimed at agent and large language model endpoints, not a Random Forest. Notebook 10 is the agent
+# MAGIC counterpart: it builds and serves a multi-step tool-calling agent with `agents.deploy` (notebook
+# MAGIC 11 queries it), which is where that span tracing earns its place.)
+# MAGIC
+# MAGIC The older `auto_capture_config` inference tables are deprecated: the platform now rejects them
+# MAGIC and requires the AI Gateway variant, configured through the `ai_gateway` argument rather than on
+# MAGIC the core config. This notebook uses the AI Gateway form.
 # MAGIC
 # MAGIC ### Availability
 # MAGIC Model Serving is **not available on Databricks Free Edition**, and serverless compute for serving
 # MAGIC is region-gated. This notebook checks whether serving is reachable and exits cleanly with an
 # MAGIC explanation if it is not, so it is safe to run anywhere. Treat it as a reference pattern to run
 # MAGIC on the client's own workspace, not in the Free Edition workshop.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Section 0: Install dependencies
+# MAGIC
+# MAGIC The AI Gateway inference table classes (`AiGatewayConfig`, `AiGatewayInferenceTableConfig`) are
+# MAGIC only in newer `databricks-sdk` releases, so we upgrade it. We also install MLflow: this notebook
+# MAGIC imports it to resolve the champion alias, and serverless compute (including Free Edition) does not
+# MAGIC always ship it. On the ML runtime the install is a fast no-op. Then we restart Python.
+
+# COMMAND ----------
+
+# MAGIC %pip install --upgrade databricks-sdk mlflow
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -59,7 +81,8 @@ WORKLOAD_SIZE = "Small"                          # smallest serving size
 SCALE_TO_ZERO = True
 
 # Inference table: where captured requests and responses land in Unity Catalog. The serving layer
-# creates the table itself from this catalog/schema/prefix; it appears after the first requests.
+# creates the table itself from this catalog/schema/prefix; it appears after the first requests
+# (which notebook 09 sends). -> enablement.05_ops.patient_risk_stratification_model_payload
 CAPTURE_CATALOG = CATALOG        # enablement
 CAPTURE_SCHEMA = SCHEMA          # 05_ops
 CAPTURE_PREFIX = MODEL_NAME      # -> enablement.05_ops.patient_risk_stratification_model_payload
@@ -139,7 +162,8 @@ else:
 
 if serving_available and champion_version is not None:
     from databricks.sdk.service.serving import (
-        AutoCaptureConfigInput,
+        AiGatewayConfig,
+        AiGatewayInferenceTableConfig,
         EndpointCoreConfigInput,
         ServedEntityInput,
     )
@@ -151,20 +175,16 @@ if serving_available and champion_version is not None:
         scale_to_zero_enabled=SCALE_TO_ZERO,
     )
 
-    # Turn on the inference table. The serving layer writes requests and responses to
-    # <catalog>.<schema>.<prefix>_payload, creating the table on first traffic.
-    auto_capture = AutoCaptureConfigInput(
+    # Turn on the AI Gateway inference table. The serving layer writes requests and responses to
+    # <catalog>.<schema>.<prefix>_payload, creating the table on first traffic. This is the current,
+    # non-deprecated request/response capture; the older auto_capture_config form is rejected now.
+    inference_table = AiGatewayInferenceTableConfig(
+        enabled=True,
         catalog_name=CAPTURE_CATALOG,
         schema_name=CAPTURE_SCHEMA,
         table_name_prefix=CAPTURE_PREFIX,
-        enabled=True,
     )
-
-    config = EndpointCoreConfigInput(
-        name=ENDPOINT_NAME,
-        served_entities=[served_entity],
-        auto_capture_config=auto_capture,
-    )
+    ai_gateway = AiGatewayConfig(inference_table_config=inference_table)
 
     existing = next(
         (e for e in w.serving_endpoints.list() if e.name == ENDPOINT_NAME), None
@@ -175,12 +195,21 @@ if serving_available and champion_version is not None:
         w.serving_endpoints.update_config_and_wait(
             name=ENDPOINT_NAME,
             served_entities=[served_entity],
-            auto_capture_config=auto_capture,
+        )
+        # The AI Gateway config is set separately from the served-entity config.
+        w.serving_endpoints.put_ai_gateway(
+            name=ENDPOINT_NAME, inference_table_config=inference_table
         )
         print("Updated.")
     else:
         print(f"Creating endpoint '{ENDPOINT_NAME}' (this can take several minutes) ...")
-        w.serving_endpoints.create_and_wait(name=ENDPOINT_NAME, config=config)
+        w.serving_endpoints.create_and_wait(
+            name=ENDPOINT_NAME,
+            config=EndpointCoreConfigInput(
+                name=ENDPOINT_NAME, served_entities=[served_entity]
+            ),
+            ai_gateway=ai_gateway,
+        )
         print("Created and ready.")
 else:
     print("Skipped endpoint creation. See the messages above for why.")
@@ -188,72 +217,14 @@ else:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Section 5: Send a test request
-# MAGIC
-# MAGIC Score one record through the endpoint to prove it answers. We use a row from the same reference
-# MAGIC dataset the model was trained on, since the endpoint expects that feature shape. On the client's
-# MAGIC build, the request payload carries engineered clinical features for one patient instead.
-
-# COMMAND ----------
-
-if serving_available and champion_version is not None:
-    from sklearn.datasets import load_breast_cancer
-    from sklearn.model_selection import train_test_split
-
-    data = load_breast_cancer(as_frame=True)
-    _, X_cohort, _, _ = train_test_split(
-        data.data, data.target, test_size=0.2, random_state=42, stratify=data.target
-    )
-    one_record = X_cohort.head(1)
-
-    # The serving API accepts a split-oriented dataframe payload.
-    response = w.serving_endpoints.query(
-        name=ENDPOINT_NAME,
-        dataframe_split={
-            "columns": list(one_record.columns),
-            "data": one_record.values.tolist(),
-        },
-    )
-    print("Endpoint response:")
-    print(response.predictions)
-else:
-    print("Skipped test request. See the messages above for why.")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Section 6: Where the captured requests land
-# MAGIC
-# MAGIC The inference table is created by the serving layer on first traffic and populated
-# MAGIC asynchronously, so it can lag a request by a few minutes. Once it exists, every request and
-# MAGIC response is a row in `enablement.05_ops.<prefix>_payload`. This is the governed audit trail, and
-# MAGIC the table notebook 07's drift and calibration queries read from: unpack the request column into
-# MAGIC feature rows and the response column into predictions, then compare predictions against actual
-# MAGIC outcomes over time.
-
-# COMMAND ----------
-
-if serving_available and champion_version is not None:
-    payload_table = f"{CAPTURE_CATALOG}.`{CAPTURE_SCHEMA}`.{CAPTURE_PREFIX}_payload"
-    if spark.catalog.tableExists(f"{CAPTURE_CATALOG}.{CAPTURE_SCHEMA}.{CAPTURE_PREFIX}_payload"):
-        print(f"Inference table: {payload_table}")
-        display(spark.sql(f"SELECT * FROM {payload_table} ORDER BY timestamp_ms DESC LIMIT 5"))
-    else:
-        print(f"Inference table {payload_table} not visible yet.")
-        print("Capture is asynchronous; give it a few minutes after the first request, then re-run this cell.")
-else:
-    print("Skipped: no endpoint, so no inference table.")
-
-# COMMAND ----------
-
-# MAGIC %md
 # MAGIC ## Recap and cleanup
 # MAGIC
-# MAGIC You deployed the `@champion` model to a real-time endpoint and scored a record through it. Points
-# MAGIC to carry forward:
+# MAGIC You deployed the `@champion` model to a real-time endpoint with request/response capture turned on.
+# MAGIC **Run notebook 09 next** to send it a scoring request and see the captured rows in the inference
+# MAGIC table. Points to carry forward:
 # MAGIC
 # MAGIC - **This build serves in batch.** Use this only where request-time scoring is genuinely needed;
-# MAGIC   the batch path in notebooks 07 and 09 is the default and the one the app relies on.
+# MAGIC   the batch path in notebooks 07 and 12 is the default and the one the app relies on.
 # MAGIC - **Serve the alias, not a version number.** Re-run this after notebook 07 promotes a new
 # MAGIC   champion and the endpoint moves with it, with no change to callers.
 # MAGIC - **Scale to zero.** An on-demand endpoint costs nothing while idle; the trade-off is a cold
@@ -272,6 +243,6 @@ else:
 
 if serving_available and champion_version is not None:
     print(f"Endpoint '{ENDPOINT_NAME}' is serving {UC_MODEL_NAME} version {champion_version}.")
-    print("Delete it by hand when you are done (see the cell above).")
+    print("Run notebook 09 to query it; delete it by hand when you are done (see the cell above).")
 else:
     print("Nothing to clean up: no endpoint was created in this run.")

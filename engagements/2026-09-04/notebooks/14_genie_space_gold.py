@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 11. Genie space over the consolidated clinical gold table
+# MAGIC # 14. Genie space over the consolidated clinical gold table
 # MAGIC
 # MAGIC Builds a single Genie space over the **consolidated** `gold_all_districts_master` table.
 # MAGIC Row-level security applied via Unity Catalog ensures each district user sees only their data.

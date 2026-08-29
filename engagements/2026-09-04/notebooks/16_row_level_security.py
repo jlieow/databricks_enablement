@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 13. Governance foundation: row-level security on the consolidated table
+# MAGIC # 16. Governance foundation: row-level security on the consolidated table
 # MAGIC
 # MAGIC This notebook demonstrates how Unity Catalog enforces district-level access control.
 # MAGIC One district must never see another district's patient data.

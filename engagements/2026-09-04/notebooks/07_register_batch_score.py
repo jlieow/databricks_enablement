@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 07. Register model champion alias and batch score
+# MAGIC # 07. Champion/challenger tagging, promotion, and batch score
 # MAGIC
 # MAGIC This notebook demonstrates the production ML workflow: register a champion alias on a model
 # MAGIC in Unity Catalog, then batch-score a snapshot of the clinical gold table to identify high-risk
@@ -31,6 +31,15 @@
 
 # MAGIC %md
 # MAGIC ## Configuration and prerequisites
+# MAGIC
+# MAGIC This runs on serverless compute (including Free Edition), whose base environment does not always
+# MAGIC include MLflow and scikit-learn, so we install them and restart Python first. On the ML runtime
+# MAGIC they are already present and the install is a fast no-op.
+
+# COMMAND ----------
+
+# MAGIC %pip install --quiet mlflow scikit-learn
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -39,7 +48,7 @@ import mlflow
 CATALOG = "enablement"
 SCHEMA = "05_ops"
 MODEL_NAME = "patient_risk_stratification_model"
-UC_MODEL_NAME = f"{CATALOG}.`{SCHEMA}`.{MODEL_NAME}"
+UC_MODEL_NAME = f"{CATALOG}.{SCHEMA}.{MODEL_NAME}"
 
 # Register models in Unity Catalog
 mlflow.set_registry_uri("databricks-uc")
@@ -50,13 +59,18 @@ print(f"Model: {UC_MODEL_NAME}")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Section 1: Set the champion alias
+# MAGIC ## Section 1: Champion/challenger tagging and promotion
 # MAGIC
-# MAGIC Find the latest registered version and point the `champion` alias at it. We use the MLflow
-# MAGIC client (`set_registered_model_alias`), which is the supported way to manage Unity Catalog model
-# MAGIC aliases. In production you would validate the model against the current champion first and only
-# MAGIC promote after it clears your performance thresholds; here we promote the latest version so the
-# MAGIC scoring step below has a `@champion` to load.
+# MAGIC Find the latest registered version (the **challenger**) and point the `champion` alias at it,
+# MAGIC using the MLflow client (`set_registered_model_alias`), the supported way to manage Unity Catalog
+# MAGIC model aliases.
+# MAGIC
+# MAGIC **This is a template: it promotes the latest version unconditionally.** The point is the
+# MAGIC promotion *step* and where it sits, so you can insert your own gate before it — compare the
+# MAGIC challenger against the current `@champion` on your held-out metric, run validation or an approval
+# MAGIC check, and only promote if it passes. The marked block below is where that logic goes. The
+# MAGIC reference `terraform/databricks_sandbox/mlflow/train_cpu_gpu` (`promote_serve_cpu_model`) shows a
+# MAGIC metric-based comparison you can drop in.
 
 # COMMAND ----------
 
@@ -72,7 +86,16 @@ if not versions:
         "register the model."
     )
 latest_version = max(versions, key=lambda v: int(v.version))
-print(f"Latest model version: {latest_version.version}")
+print(f"Challenger (latest registered version): {latest_version.version}")
+
+# ---------------------------------------------------------------------------------------------------
+# INSERT YOUR PROMOTION LOGIC HERE (before the alias moves).
+#
+# This template promotes the challenger unconditionally. In production, gate it: read the current
+# champion (client.get_model_version_by_alias(..., "champion")), compare it against the challenger on
+# your held-out metric, run any validation/approval, and only fall through to the promotion below if
+# the challenger should win. See train_cpu_gpu/promote_serve_cpu_model for a worked roc_auc comparison.
+# ---------------------------------------------------------------------------------------------------
 
 # Create or move the champion alias. set_registered_model_alias is idempotent: it repoints an
 # existing alias, so this is safe to re-run.
@@ -211,7 +234,7 @@ display(results_df.limit(10))
 # MAGIC - Log all scoring runs and predictions for audit trail
 # MAGIC
 # MAGIC **Batch is the serving path for this build.** The scores land in a table, the pipeline writes
-# MAGIC them to PostgreSQL (notebook 09), and the app reads them. There is no synchronous call to the
+# MAGIC them to PostgreSQL (notebook 12), and the app reads them. There is no synchronous call to the
 # MAGIC model at request time. If you ever need low-latency, request-time scoring instead, notebook 08
 # MAGIC shows how to deploy the same `@champion` model to a real-time Model Serving endpoint. That is an
 # MAGIC optional capability, not this build's pattern.

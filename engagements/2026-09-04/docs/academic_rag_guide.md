@@ -6,7 +6,7 @@ Agenda item 9. The team wants to answer clinical questions by citing research li
 agent over a volume of research abstracts provides grounded, cited answers without requiring a
 separate knowledge-base platform or third-party API.
 
-This is a **UI walkthrough and curation guide**. Notebook 10 provides a fallback API approach.
+This is a **UI walkthrough and curation guide**. Notebook 13 provides a fallback API approach.
 **Note:** The deprecated Knowledge Assistant is being phased out in favor of this Genie agent
 pattern. Its availability in some regions is unconfirmed; check with the account team.
 

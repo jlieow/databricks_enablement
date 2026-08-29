@@ -122,7 +122,7 @@ For the health analytics platform:
 
 2. Route all LLM calls through the gateway:
    - Notebook 05 (clinical extraction) calls `gateway: clinical-note-extraction`
-   - Notebook 12 (dashboard summaries) calls `gateway: health-summaries`
+   - Notebook 15 (dashboard summaries) calls `gateway: health-summaries`
    - Genie agent over gold calls `gateway: health-genie`
 
 3. Monitor spend and accuracy:

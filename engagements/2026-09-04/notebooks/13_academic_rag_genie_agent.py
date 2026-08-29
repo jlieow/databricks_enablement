@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 10. Academic-literature retrieval with a Genie agent
+# MAGIC # 13. Academic-literature retrieval with a Genie agent
 # MAGIC
 # MAGIC Agenda item 9. The team wants to answer clinical questions by citing research literature.
 # MAGIC A Genie agent over a volume of research abstracts provides grounded, cited answers.

@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 12. Dashboard and AI-powered clinical summaries
+# MAGIC # 15. Dashboard and AI-powered clinical summaries
 # MAGIC
 # MAGIC Demonstrates how to generate narrative summaries of clinical metrics using AI functions.
 # MAGIC Handles gracefully if AI functions are not available (Free Edition compatibility).

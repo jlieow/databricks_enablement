@@ -2,7 +2,7 @@
 
 **Audience:** whoever builds and curates a Genie space per district
 
-Notebook 11 creates a working space via the API. This guide is for building one in the UI, which
+Notebook 14 creates a working space via the API. This guide is for building one in the UI, which
 is what the team will actually do for each new district. Building it by hand is also better
 enablement: the curation is the work, and doing it manually is what makes that obvious.
 
@@ -35,7 +35,7 @@ more for accuracy than any instruction text. It is also the semantic layer the t
 today: the comments live on the table, so they serve Catalog Explorer, Genie, and anyone browsing.
 
 In **Catalog Explorer**, open the gold table (`enablement.04_gold.gold_all_districts_master`) and add
-a table comment plus a comment on every column. Or run the SQL from notebook 11, which does the same.
+a table comment plus a comment on every column. Or run the SQL from notebook 14, which does the same.
 
 The test of a good column comment: would a new analyst know what to do with this column without asking?
 For example, `readmission_count` should say it is the count of hospital readmissions within 30 days

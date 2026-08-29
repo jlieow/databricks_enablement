@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 09. Lakebase change data feed sync: batch serving to PostgreSQL
+# MAGIC # 12. Lakebase change data feed sync: batch serving to PostgreSQL
 # MAGIC
 # MAGIC This notebook sets up a **Lakebase change data feed sync**, so that clinical data and model
 # MAGIC scores flow from Delta into a PostgreSQL operational table that the Databricks App reads.

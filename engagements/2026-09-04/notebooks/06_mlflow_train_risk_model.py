@@ -9,10 +9,11 @@
 # MAGIC
 # MAGIC ### What the model predicts
 # MAGIC The model is a binary classifier for patient risk stratification. Given 30 numeric measurements
-# MAGIC from a patient profile, it predicts whether a patient is at **high risk** (1) or **low risk** (0)
-# MAGIC for an adverse outcome. This demonstration uses the scikit-learn breast cancer dataset, reframed as
-# MAGIC a teaching example for binary risk classification. This is not a clinical tool — it is for
-# MAGIC demonstration purposes only.
+# MAGIC from a patient profile, it predicts a risk class for an adverse outcome. This demonstration uses the
+# MAGIC scikit-learn breast cancer dataset, reframed as a teaching example for binary risk classification:
+# MAGIC the malignant label (`0`) stands in for **higher risk** and the benign label (`1`) for **lower
+# MAGIC risk**, matching the mapping notebook 07 applies when it batch-scores. This is not a clinical tool —
+# MAGIC it is for demonstration purposes only.
 # MAGIC
 # MAGIC ### What this notebook does
 # MAGIC 1. Loads a tabular dataset (scikit-learn breast cancer, reframed as risk data)
@@ -37,9 +38,15 @@
 # MAGIC %md
 # MAGIC ## Section 1: Prerequisites & setup
 # MAGIC
-# MAGIC The Databricks ML runtime ships with scikit-learn and MLflow, so no installs are needed there.
-# MAGIC On serverless or a standard runtime, `%pip install scikit-learn mlflow` first if either import
-# MAGIC fails. We point MLflow's model registry at Unity Catalog.
+# MAGIC This engagement runs on serverless compute (including Databricks Free Edition), whose base
+# MAGIC environment does not always include MLflow and scikit-learn. We install them and restart Python
+# MAGIC first, so the notebook runs the same everywhere. On the ML runtime they are already present and
+# MAGIC the install is a fast no-op. After installing, we point MLflow's model registry at Unity Catalog.
+
+# COMMAND ----------
+
+# MAGIC %pip install --quiet mlflow scikit-learn
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -71,12 +78,18 @@ CATALOG_NAME = "enablement"   # Unity Catalog created by notebook 01
 SCHEMA_NAME  = "05_ops"       # Schema for model registration
 MODEL_NAME   = "patient_risk_stratification_model"
 
-# Full three-level Unity Catalog name: catalog.schema.model
-UC_MODEL_NAME = f"{CATALOG_NAME}.`{SCHEMA_NAME}`.{MODEL_NAME}"
+# Full three-level Unity Catalog name: catalog.schema.model. No backticks: the MLflow registry and
+# the models:/ URI take the raw dotted name, and a digit-leading schema like 05_ops is a valid UC
+# identifier at the API level (backticks are only for SQL parsing). This matches notebooks 07 and 08.
+UC_MODEL_NAME = f"{CATALOG_NAME}.{SCHEMA_NAME}.{MODEL_NAME}"
 
-# MLflow experiment, placed in the current user's workspace directory so runs are discoverable.
+# MLflow experiment, placed directly under the current user's home so runs are grouped and
+# discoverable. We use a single path segment under /Users/<you>/ (which always exists) rather than a
+# nested folder: mlflow.set_experiment does not create intermediate workspace directories, so a
+# nested path like /Users/<you>/enablement/... fails with "Parent directory does not exist" unless
+# something created that folder first.
 username = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
-EXPERIMENT_NAME = f"/Users/{username}/enablement/train_risk_model"
+EXPERIMENT_NAME = f"/Users/{username}/enablement_train_risk_model"
 mlflow.set_experiment(EXPERIMENT_NAME)
 
 # Stamp this run with the time it started. This names the run, is logged as a param and tag on the
@@ -105,10 +118,10 @@ print("=" * 70)
 # MAGIC
 # MAGIC We use a tabular dataset that ships with scikit-learn. Each row represents a patient
 # MAGIC described by 30 numeric features (clinical measurements and laboratory values). The target labels
-# MAGIC a patient as at high risk (`1`) or low risk (`0`) for an adverse outcome, so the model learns to
-# MAGIC predict patient risk from the measurements. It is a small, self-contained binary classification
-# MAGIC problem, which is plenty to demonstrate an end-to-end training and logging workflow for patient
-# MAGIC risk stratification.
+# MAGIC a patient as higher risk (`0`, malignant) or lower risk (`1`, benign) for an adverse outcome, so
+# MAGIC the model learns to predict patient risk from the measurements. It is a small, self-contained
+# MAGIC binary classification problem, which is plenty to demonstrate an end-to-end training and logging
+# MAGIC workflow for patient risk stratification.
 
 # COMMAND ----------
 
