@@ -1,0 +1,141 @@
+bundle:
+  name: sample_encounters_job
+
+# ---------------------------------------------------------------------------
+# STEP 1 - DECLARE every variable here, at the top level.
+#
+# A variable that is only given a value under `targets.<name>.variables`
+# (without also appearing in this block) is "not defined", and any
+# `${var.<name>}` that references it is left in the output as a literal
+# string. Declaring it here is what turns `${var.catalog}` into a real value.
+# ---------------------------------------------------------------------------
+variables:
+  catalog:
+    description: Unity Catalog catalog the bundle creates and the job writes into.
+    default: enablement_dabs_demo
+  schema:
+    description: Schema (inside var.catalog) the bundle creates for the job's output tables.
+    default: encounters
+  row_count:
+    description: Number of synthetic encounter rows the ingest task generates.
+    default: "500"
+  notification_email:
+    description: Address that receives a job-failure email.
+    default: ""
+
+resources:
+  # -------------------------------------------------------------------------
+  # The catalog and schema are created by the bundle itself - no Terraform.
+  # DABs supports `catalogs` and `schemas` as first-class resources, so a single
+  # `databricks bundle deploy` provisions the Unity Catalog objects AND the job.
+  # The schema references the catalog with ${resources...}, which also tells the
+  # bundle to create the catalog first.
+  #
+  # This is a self-contained DABs packaging example (agenda item 5). It creates
+  # its own catalog rather than writing into the `enablement` catalog the
+  # notebooks use, so it can be deployed and torn down on its own without
+  # depending on the medallion notebooks having run.
+  # -------------------------------------------------------------------------
+  catalogs:
+    demo_catalog:
+      name: ${var.catalog}
+      comment: "Catalog for the sample_encounters_job DABs demo"
+
+  schemas:
+    demo_schema:
+      catalog_name: ${resources.catalogs.demo_catalog.name}
+      name: ${var.schema}
+      comment: "Holds the sample_encounters_job demo's output tables"
+
+  jobs:
+    sample_encounters_job:
+      name: sample-encounters-job
+      description: "Two-task encounters pipeline showing Asset Bundle variables resolving into job parameters"
+
+      # -----------------------------------------------------------------------
+      # STEP 2 - Where the passthrough happens.
+      #
+      # `${...}` IS substituted here, because this block lives in databricks.yml
+      # and the bundle renders it at deploy time. Two kinds of reference appear:
+      #
+      #   - `${var.row_count}` - a plain VARIABLE passthrough. The value comes
+      #     straight from the active target.
+      #
+      #   - `${resources.schemas.demo_schema.name}` - a RESOURCE reference. The
+      #     job is handed the schema the bundle actually created. This matters in
+      #     `mode: development`, where the bundle prefixes the schema name (e.g.
+      #     `dev_you_encounters`). Referencing the resource (not `${var.schema}`)
+      #     makes the job write to that same prefixed schema, so dev and prod
+      #     stay consistent end to end.
+      # -----------------------------------------------------------------------
+      tasks:
+        - task_key: ingest
+          spark_python_task:
+            python_file: ./src/ingest.py
+            parameters:
+              - "--catalog=${resources.catalogs.demo_catalog.name}"
+              - "--schema=${resources.schemas.demo_schema.name}"
+              - "--row-count=${var.row_count}"
+          environment_key: default
+
+        # transform runs only after ingest succeeds - depends_on wires the DAG.
+        - task_key: transform
+          depends_on:
+            - task_key: ingest
+          spark_python_task:
+            python_file: ./src/transform.py
+            parameters:
+              - "--catalog=${resources.catalogs.demo_catalog.name}"
+              - "--schema=${resources.schemas.demo_schema.name}"
+          environment_key: default
+
+      # Serverless compute: no cluster to size or start. `environments` declares
+      # the serverless environment the spark_python tasks run in.
+      environments:
+        - environment_key: default
+          spec:
+            client: "3"
+
+      email_notifications:
+        on_failure:
+          - ${var.notification_email}
+
+targets:
+  # -------------------------------------------------------------------------
+  # STEP 3 - Give the declared variables their per-target VALUES.
+  #
+  # `dev` deploys under your own user with a "[dev you]" name prefix and pauses
+  # any schedule, so it never competes with the shared prod job. `prod` deploys
+  # the job as-is and turns the daily schedule on.
+  #
+  # The host comes from your Databricks CLI profile:
+  #   databricks bundle deploy -p <profile>
+  # To pin a host in the bundle instead, add `workspace: { host: https://... }`.
+  # -------------------------------------------------------------------------
+  dev:
+    mode: development
+    default: true
+    variables:
+      catalog: enablement_dabs_demo
+      schema: encounters
+      row_count: "500"
+      notification_email: "you@example.com"
+
+  prod:
+    mode: production
+    workspace:
+      root_path: /.dabs/${bundle.name}
+    variables:
+      catalog: enablement_dabs_demo
+      schema: encounters_prod
+      row_count: "50000"
+      notification_email: "data-team@example.com"
+    resources:
+      jobs:
+        sample_encounters_job:
+          # A schedule only makes sense in prod. In `dev` mode the bundle pauses
+          # schedules automatically, so this runs daily only once deployed to prod.
+          schedule:
+            quartz_cron_expression: "0 0 6 * * ?"
+            timezone_id: UTC
+            pause_status: UNPAUSED

@@ -1,0 +1,128 @@
+bundle:
+  name: sample_flask_lakebase
+
+# ---------------------------------------------------------------------------
+# STEP 1 - DECLARE every variable here, at the top level.
+#
+# A variable that is only given a value under `targets.<name>.variables`
+# (without also appearing in this block) is "not defined", and any
+# `${var.<name>}` that references it is left in the output as a literal
+# string. Declaring it here is what turns `${var.database_instance_name}`
+# into a real value.
+# ---------------------------------------------------------------------------
+variables:
+  postgres_branch:
+    description: >-
+      Full resource path of the Lakebase Autoscaling branch the app connects to,
+      e.g. `projects/<project-id>/branches/production`. The project (and its
+      implicit production branch, primary endpoint, and default
+      `databricks_postgres` database) must already exist - this bundle attaches
+      to it, it does not create it (see the note in the README).
+    default: ""
+  postgres_database:
+    description: >-
+      Full resource path of the database on that branch,
+      e.g. `projects/<project-id>/branches/production/databases/databricks-postgres`.
+      Note the default database's resource id is `databricks-postgres` (hyphen)
+      while its Postgres database name is `databricks_postgres` (underscore).
+    default: ""
+  serving_schema:
+    description: Postgres schema holding the serving table the app reads.
+    default: health_analytics
+  serving_table:
+    description: Postgres table the app reads (populated by notebook 12).
+    default: patient_risk_scores
+
+resources:
+  apps:
+    sample_flask_lakebase:
+      name: sample-flask-lakebase
+      description: "Read-only internal service that serves batch patient risk scores from Lakebase"
+      source_code_path: ./
+
+      # -------------------------------------------------------------------
+      # STEP 2 - Where the passthrough happens.
+      #
+      # `${var.x}` IS substituted here, because this block lives in
+      # databricks.yml and the bundle renders it at deploy time. The resulting
+      # config OVERRIDES the app's own app.yaml. Define variable-backed env
+      # vars HERE, not in a source app.yaml (where ${var.x} would not be
+      # substituted and the app would receive the literal string).
+      # -------------------------------------------------------------------
+      resources:
+        # Attach the Lakebase Autoscaling database under the key `postgres`.
+        # This is the `postgres` app-resource block (NOT the older `database`
+        # block, which is for Provisioned Lakebase instances). app.py calls
+        # `w.postgres.generate_database_credential(endpoint=PGENDPOINT)`, which
+        # is the Autoscaling credential API and expects the endpoint in
+        # `projects/.../branches/.../endpoints/...` form - exactly what this
+        # resource injects. The Apps runtime injects PGHOST/PGPORT/PGDATABASE/
+        # PGUSER/PGENDPOINT/... and app.py reads them. The key MUST be
+        # `postgres` because the config.env below maps PGENDPOINT from it.
+        - name: postgres
+          description: "Lakebase Autoscaling database backing the risk-score service"
+          postgres:
+            branch: ${var.postgres_branch}
+            database: ${var.postgres_database}
+            # CAN_CONNECT_AND_CREATE lets the app's service principal open a
+            # connection and, if needed, create its own objects. The app itself
+            # is read-only, but the connect grant is required.
+            permission: CAN_CONNECT_AND_CREATE
+
+      config:
+        command: ["python", "app.py"]
+        # NOTE: when the bundle sets `config.env`, it REPLACES the env block in
+        # the app's own app.yaml (it does not merge). So the `PGENDPOINT`
+        # `valueFrom: postgres` mapping that app.yaml declares must be repeated
+        # HERE, or the app starts with PGENDPOINT="" and every connection fails
+        # with "Field 'endpoint' is required".
+        env:
+          # Maps the endpoint of the attached `postgres` resource (the key must
+          # match the resource name above). app.py uses it to mint OAuth tokens.
+          - name: PGENDPOINT
+            value_from: postgres
+          # Plain app config the code reads to locate the serving table.
+          - name: SERVING_SCHEMA
+            value: ${var.serving_schema}
+          - name: SERVING_TABLE
+            value: ${var.serving_table}
+
+targets:
+  # -------------------------------------------------------------------------
+  # STEP 3 - Give the declared variables their per-target VALUES.
+  #
+  # The host comes from your Databricks CLI profile:
+  #   databricks bundle deploy -p <profile>
+  # To pin a host in the bundle instead, add `workspace: { host: https://... }`
+  # to a target below.
+  # -------------------------------------------------------------------------
+  dev:
+    mode: development
+    default: true
+    # Bundle targets do NOT auto-namespace app names, so give dev its own name
+    # to keep the dev and prod apps separate.
+    resources:
+      apps:
+        sample_flask_lakebase:
+          name: sample-flask-lakebase-dev
+    variables:
+      # PLACEHOLDER: set these to your Lakebase Autoscaling project's branch and
+      # default-database resource paths before deploying.
+      postgres_branch: "projects/PASTE_YOUR_PROJECT_ID/branches/production"
+      postgres_database: "projects/PASTE_YOUR_PROJECT_ID/branches/production/databases/databricks-postgres"
+      serving_schema: health_analytics
+      serving_table: patient_risk_scores
+
+  prod:
+    mode: production
+    workspace:
+      root_path: /.dabs/${bundle.name}
+    resources:
+      apps:
+        sample_flask_lakebase:
+          name: sample-flask-lakebase-prod
+    variables:
+      postgres_branch: "projects/PASTE_YOUR_PROJECT_ID/branches/production"
+      postgres_database: "projects/PASTE_YOUR_PROJECT_ID/branches/production/databases/databricks-postgres"
+      serving_schema: health_analytics
+      serving_table: patient_risk_scores

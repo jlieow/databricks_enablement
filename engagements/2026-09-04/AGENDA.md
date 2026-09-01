@@ -27,7 +27,7 @@ credentials. Safe synthetic data and clinical-note text only.
 | 3 | Silver to Gold: dedupe, validate, clinical metrics | `notebooks/03_medallion_transform.py` |
 | — | Onboarding a second health district with no code change | `notebooks/04_template_reuse.py` |
 | 4 | Extracting structured data from clinical notes with AI functions | `notebooks/05_clinical_note_extraction.py` |
-| 5 | Packaging with Databricks Asset Bundles | `docs/asset_bundles_guide.md` |
+| 5 | Packaging with Databricks Asset Bundles | `docs/asset_bundles_guide.md`, `dabs/jobs/sample_encounters_job/`, `dabs/apps/sample_flask_lakebase/` |
 
 Notes on the mapping:
 
@@ -39,8 +39,14 @@ Notes on the mapping:
   AI functions (`ai_extract`, `ai_classify`, `ai_parse_document`) on synthetic clinical-note text to
   produce structured fields. The template reuse that onboards the second district (`04_template_reuse`)
   is the separate "onboarding" step between items 3 and 4 listed above.
-- **Item 5 is documentation only**, not a runnable notebook. `databricks.yml` shows the pattern; it
-  is not deployed, but teaches the shape.
+- **Item 5 has a walkthrough guide plus two runnable Asset Bundles** under `dabs/`. The guide
+  (`docs/asset_bundles_guide.md`) teaches the shape; the bundles are working reference deployments the
+  team can `databricks bundle deploy` themselves: `dabs/jobs/sample_encounters_job/` (a two-task
+  serverless ingest -> transform job that also creates its Unity Catalog catalog and schema) and
+  `dabs/apps/sample_flask_lakebase/` (the risk-score Databricks App from item 8, packaged as a bundle
+  with its Lakebase `postgres` resource). Each bundle has its own README. The job bundle needs
+  `DATABRICKS_BUNDLE_ENGINE=direct` because it declares a catalog resource; the app bundle needs a
+  Lakebase Autoscaling project to attach to.
 
 ---
 
@@ -251,8 +257,14 @@ Ordering traps:
 - **AI functions may not be available in all regions.** `ai_extract`, `ai_classify`, `ai_parse_document`
   may not be enabled depending on region and workspace settings. Notebooks handle absence gracefully
   with a clear message and deterministic fallback.
-- **Managed Postgres autoscaling is not yet in all regions.** Notebook 12 teaches the pattern on Free
-  Edition Lakebase; autoscaling is a roadmap item to revisit when regional availability lands.
+- **Notebook 12 uses Lakebase Autoscaling, to match the app.** It provisions a Lakebase Autoscaling
+  project (`projects/<id>` with a `production` branch and `primary` endpoint), creates and populates
+  `health_analytics.patient_risk_scores`, and the Databricks App attaches to that same project. Both
+  use the Autoscaling model deliberately: a Provisioned instance does not expose the
+  `projects/.../endpoints/...` endpoint the app mints credentials against. **Autoscaling is
+  region-gated and may not be available on Free Edition in all regions**, so this serving-to-Postgres
+  step is the one part of the workshop that needs a workspace and region offering Lakebase; the rest
+  runs on Free Edition. Verified end to end: notebook 12 populated the table and the app rendered it.
 - **Genie agent availability in some regions is unconfirmed.** Notebook 13 teaches the pattern; if
   the workspace region does not support it, the notebook exits with a clear message.
 

@@ -140,3 +140,22 @@ databricks bundle deploy --target prod
 This is the shape the full build will use. Enablement teaches the underlying Databricks capabilities
 (medallion, models, dashboards, Genie, serving); the full build wraps them all in a DAB.
 
+---
+
+## Runnable examples in this engagement
+
+Two working Asset Bundles live under `dabs/`, each with its own README, so the team can deploy a real
+DAB rather than only read about one:
+
+- `dabs/jobs/sample_encounters_job/` — a two-task serverless job (ingest then transform) that also
+  creates its own Unity Catalog catalog and schema from the bundle. Shows variable passthrough into
+  task parameters and dev/prod targets. Needs `export DATABRICKS_BUNDLE_ENGINE=direct` because it
+  declares a catalog resource.
+- `dabs/apps/sample_flask_lakebase/` — the risk-score Databricks App (agenda item 8) packaged as a
+  bundle, attaching a Lakebase Autoscaling database under the app's `postgres` resource. Needs a
+  Lakebase Autoscaling project to point at.
+
+Both were deployed and run end to end while preparing this material. Two portability notes from that
+run, worth knowing before the full build: a bundle's `config.env` **replaces** an app's `app.yaml`
+env block (it does not merge), and the bundle field is `value_from` (snake_case), not `valueFrom`.
+
