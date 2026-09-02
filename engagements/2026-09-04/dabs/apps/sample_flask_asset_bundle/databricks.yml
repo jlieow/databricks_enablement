@@ -1,0 +1,118 @@
+bundle:
+  name: sample_flask_asset_bundle
+
+# ---------------------------------------------------------------------------
+# STEP 1 - DECLARE every variable here, at the top level.
+#
+# A variable that is only given a value under `targets.<name>.variables`
+# (without also appearing in this block) is "not defined", and any
+# `${var.<name>}` that references it is left in the output as a literal
+# string. Declaring it here is what turns `${var.env}` into a real value.
+# ---------------------------------------------------------------------------
+variables:
+  env:
+    description: Logical environment name passed to the app (dev, staging, prod).
+    default: dev
+  warehouse_id:
+    description: SQL warehouse id the app should use.
+    default: ""
+  sp_application_id:
+    description: Service principal application id that manages the app.
+    default: ""
+  uc_secret_full_name:
+    description: >-
+      Three-level name (catalog.schema.name) of the Unity Catalog secret the app
+      reads at runtime. This is a NON-SENSITIVE pointer, not the value - the value
+      is fetched at runtime under READ SECRET governance. Set this to the
+      `uc_secret_full_names` output of the OPTIONAL Terraform in ./terraform, or
+      leave it as-is: the app renders a "not configured" message instead of
+      crashing when the secret does not exist.
+    default: ""
+
+resources:
+  apps:
+    sample_flask_asset_bundle:
+      name: sample-flask-asset-bundle
+      description: "Demonstrates Asset Bundle variables resolving into app environment variables"
+      source_code_path: ./
+      config:
+        command: ["python", "app.py"]
+
+        # -------------------------------------------------------------------
+        # STEP 2 - Where the passthrough happens.
+        #
+        # `${var.x}` IS substituted here, because this block lives in
+        # databricks.yml and the bundle renders it at deploy time. The
+        # resulting env vars OVERRIDE anything in the app's own app.yaml.
+        #
+        # Define variable-backed env vars HERE, not in a source app.yaml (where
+        # ${var.x} would not be substituted and the app would receive the
+        # literal string).
+        # -------------------------------------------------------------------
+        env:
+          - name: APP_ENV
+            value: ${var.env}
+          - name: SQL_WAREHOUSE_ID
+            value: ${var.warehouse_id}
+          # Only the secret's NAME is passed here (non-sensitive). The app reads
+          # the value at runtime via the Unity Catalog secrets API, gated by the
+          # READ SECRET grant that the optional Terraform applies. Never put a
+          # secret value in config.env - use this pointer + a runtime read.
+          - name: UC_SECRET_FULL_NAME
+            value: ${var.uc_secret_full_name}
+
+targets:
+  # -------------------------------------------------------------------------
+  # STEP 3 - Give the declared variables their per-target VALUES.
+  # -------------------------------------------------------------------------
+  # The host comes from your Databricks CLI profile:
+  #   databricks bundle deploy -p <profile>
+  # To pin a host in the bundle instead, add `workspace: { host: https://... }`
+  # to a target below.
+  dev:
+    mode: development
+    default: true
+    # Give dev its own app name (targets don't auto-namespace app names). This
+    # keeps the dev and prod apps separate so both can exist at once.
+    # development mode still grants the deploying user CAN_MANAGE automatically,
+    # so this target needs no host, root_path, or permissions block to deploy.
+    resources:
+      apps:
+        sample_flask_asset_bundle:
+          name: sample-flask-asset-bundle-dev
+    variables:
+      # Per-target values. Each must be NON-EMPTY - Databricks Apps rejects an
+      # empty env value, so a variable that feeds config.env cannot be "".
+      env: dev
+      warehouse_id: "dev-sql-warehouse-id"
+      # Matches the dev catalog/secret created by the OPTIONAL ./terraform. The
+      # app degrades gracefully to "not configured" if this secret is absent.
+      uc_secret_full_name: "enablement_sfab_dev.secrets.external_api_key"
+    presets:
+      tags:
+        environment: ${var.env}
+    # To also grant a service principal, set var.sp_application_id and add:
+    #   permissions:
+    #     - service_principal_name: ${var.sp_application_id}
+    #       level: CAN_MANAGE
+
+  prod:
+    mode: production
+    workspace:
+      root_path: /.dabs/${bundle.name}
+    # Give prod its own app name. Bundle targets do NOT auto-namespace app names
+    # (and presets.name_prefix does not apply to apps), so without this, prod
+    # would try to create the same `sample-flask-asset-bundle` as dev and fail
+    # with "an app with the same name already exists".
+    resources:
+      apps:
+        sample_flask_asset_bundle:
+          name: sample-flask-asset-bundle-prod
+    variables:
+      env: prod
+      warehouse_id: "prod-sql-warehouse-id"
+      # Matches the prod catalog/secret created by the OPTIONAL ./terraform.
+      uc_secret_full_name: "enablement_sfab_prod.secrets.external_api_key"
+    presets:
+      tags:
+        environment: ${var.env}

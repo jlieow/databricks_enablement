@@ -6,8 +6,13 @@ bundle you deploy with the Databricks command line interface (CLI):
 
 | Bundle | What it is | Deploys |
 | --- | --- | --- |
+| `apps/sample_flask_asset_bundle/` | The barebones intro app: an Asset Bundle whose variables pass through to app environment variables, plus an optional Unity Catalog secret read at runtime. No data dependency | A Databricks App that needs only a workspace |
 | `jobs/sample_encounters_job/` | Two-task serverless job (ingest then transform) that also creates its own Unity Catalog catalog and schema | A Unity Catalog catalog + schema and a two-task job |
 | `apps/sample_flask_lakebase/` | The risk-score Databricks App (agenda item 8), packaged as a bundle with its Lakebase `postgres` resource | A Databricks App bound to a Lakebase Autoscaling database |
+
+**Start with `apps/sample_flask_asset_bundle/`.** It is the only bundle with no
+external dependency: deploy it and it works. The other two need extra setup (the
+`direct` engine, or a Lakebase project), so they come after.
 
 Each bundle has its own README with the full detail; this file is the shared
 quick start. See also `../docs/asset_bundles_guide.md` for the concepts.
@@ -30,6 +35,44 @@ name for the app).
 `databricks bundle deploy` creates or updates the resources; `databricks bundle
 run <resource>` runs the job or starts the app. `databricks bundle validate`
 checks the definition without deploying.
+
+---
+
+## Intro app bundle: `apps/sample_flask_asset_bundle`
+
+Start here. This bundle has **no external dependency**: deploy it against any
+workspace and it works. It shows the two Asset Bundle mechanics the full build
+relies on: bundle variables passing through to app environment variables, and an
+optional Unity Catalog secret read at runtime without the value touching the app
+config.
+
+```bash
+cd apps/sample_flask_asset_bundle
+profile=<PROFILE>
+
+databricks bundle validate -p $profile
+databricks bundle deploy -t dev -p $profile          # dev is the default target
+databricks bundle run sample_flask_asset_bundle -t dev -p $profile
+
+# See a variable change flow through (should show "staging", not "${var.env}"):
+databricks bundle deploy -t dev -p $profile --var="env=staging"
+databricks apps get sample-flask-asset-bundle-dev -o json | grep -A2 APP_ENV
+```
+
+Open the app URL: the table shows `APP_ENV` and the other bundle variables, and
+the Unity Catalog secret section shows **not configured** (no secret is wired up
+by default, and the app renders fine without one). Wiring the optional secret is
+covered in the bundle's own README under **"Optional: read a Unity Catalog
+secret at runtime"**, and maps to the external-model-key governance story in
+agenda item 12.
+
+Tear down:
+
+```bash
+cd apps/sample_flask_asset_bundle
+databricks bundle destroy -t dev -p $profile
+databricks bundle destroy -t prod -p $profile
+```
 
 ---
 
@@ -128,10 +171,10 @@ databricks postgres delete-project my-enablement-pg -p $profile
 
 ## Notes for this engagement
 
-- **Free Edition.** Serverless jobs and Unity Catalog run on Free Edition.
-  Lakebase is region-gated and may not be available there, so the app bundle
-  needs a workspace with a Lakebase Autoscaling project; the rest of the
-  material still runs on Free Edition.
+- **Free Edition.** The intro app (`sample_flask_asset_bundle`), the serverless
+  job, and Unity Catalog all run on Free Edition. Lakebase is region-gated and
+  may not be available there, so only the `sample_flask_lakebase` app needs a
+  workspace with a Lakebase Autoscaling project; the rest runs on Free Edition.
 - **Fictional data only.** The seed data is synthetic patient-encounter data for
   two fictional health districts. No real or identifying data appears anywhere.
-- Both bundles were deployed and run end to end while preparing this material.
+- The bundles were deployed and run end to end while preparing this material.

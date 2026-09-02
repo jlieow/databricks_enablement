@@ -27,7 +27,7 @@ credentials. Safe synthetic data and clinical-note text only.
 | 3 | Silver to Gold: dedupe, validate, clinical metrics | `notebooks/03_medallion_transform.py` |
 | — | Onboarding a second health district with no code change | `notebooks/04_template_reuse.py` |
 | 4 | Extracting structured data from clinical notes with AI functions | `notebooks/05_clinical_note_extraction.py` |
-| 5 | Packaging with Databricks Asset Bundles | `docs/asset_bundles_guide.md`, `dabs/jobs/sample_encounters_job/`, `dabs/apps/sample_flask_lakebase/` |
+| 5 | Packaging with Databricks Asset Bundles | `docs/asset_bundles_guide.md`, `dabs/apps/sample_flask_asset_bundle/`, `dabs/jobs/sample_encounters_job/`, `dabs/apps/sample_flask_lakebase/` |
 
 Notes on the mapping:
 
@@ -39,14 +39,17 @@ Notes on the mapping:
   AI functions (`ai_extract`, `ai_classify`, `ai_parse_document`) on synthetic clinical-note text to
   produce structured fields. The template reuse that onboards the second district (`04_template_reuse`)
   is the separate "onboarding" step between items 3 and 4 listed above.
-- **Item 5 has a walkthrough guide plus two runnable Asset Bundles** under `dabs/`. The guide
+- **Item 5 has a walkthrough guide plus three runnable Asset Bundles** under `dabs/`. The guide
   (`docs/asset_bundles_guide.md`) teaches the shape; the bundles are working reference deployments the
-  team can `databricks bundle deploy` themselves: `dabs/jobs/sample_encounters_job/` (a two-task
-  serverless ingest -> transform job that also creates its Unity Catalog catalog and schema) and
-  `dabs/apps/sample_flask_lakebase/` (the risk-score Databricks App from item 8, packaged as a bundle
-  with its Lakebase `postgres` resource). Each bundle has its own README. The job bundle needs
-  `DATABRICKS_BUNDLE_ENGINE=direct` because it declares a catalog resource; the app bundle needs a
-  Lakebase Autoscaling project to attach to.
+  team can `databricks bundle deploy` themselves. **Start with `dabs/apps/sample_flask_asset_bundle/`**
+  (the barebones intro app: bundle variables passing through to app environment variables, plus an
+  optional Unity Catalog secret read at runtime) because it has no external dependency and just works.
+  Then `dabs/jobs/sample_encounters_job/` (a two-task serverless ingest -> transform job that also
+  creates its Unity Catalog catalog and schema) and `dabs/apps/sample_flask_lakebase/` (the risk-score
+  Databricks App from item 8, packaged as a bundle with its Lakebase `postgres` resource). Each bundle
+  has its own README. The intro app runs on Free Edition with nothing extra; the job bundle needs
+  `DATABRICKS_BUNDLE_ENGINE=direct` because it declares a catalog resource; the Lakebase app bundle
+  needs a Lakebase Autoscaling project to attach to.
 
 ---
 

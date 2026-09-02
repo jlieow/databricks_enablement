@@ -4,3 +4,13 @@ __pycache__/
 **/.claude
 **/.isaac
 **/.databricks
+
+# Databricks Asset Bundle build artifacts
+**/bundle.zip
+
+# Terraform build artifacts and state. terraform.tfvars can hold real secret
+# values and tfstate can hold them in plaintext, so never commit either.
+**/.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars

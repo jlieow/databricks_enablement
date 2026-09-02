@@ -144,9 +144,14 @@ This is the shape the full build will use. Enablement teaches the underlying Dat
 
 ## Runnable examples in this engagement
 
-Two working Asset Bundles live under `dabs/`, each with its own README, so the team can deploy a real
-DAB rather than only read about one:
+Three working Asset Bundles live under `dabs/`, each with its own README, so the team can deploy a real
+DAB rather than only read about one. Start with the first: it is the only one with no external dependency.
 
+- `dabs/apps/sample_flask_asset_bundle/` — the barebones intro app. An Asset Bundle whose variables pass
+  through to the app's environment variables (with a page that flags any that arrived unsubstituted), plus
+  an optional Unity Catalog secret read at runtime without the value touching the app config. No data
+  dependency: deploy it against any workspace and it works, which makes it the right first thing to run.
+  The optional secret piece maps to the external-model-key governance story in agenda item 12.
 - `dabs/jobs/sample_encounters_job/` — a two-task serverless job (ingest then transform) that also
   creates its own Unity Catalog catalog and schema from the bundle. Shows variable passthrough into
   task parameters and dev/prod targets. Needs `export DATABRICKS_BUNDLE_ENGINE=direct` because it

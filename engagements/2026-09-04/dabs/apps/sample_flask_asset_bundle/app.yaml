@@ -1,0 +1,18 @@
+# app.yaml is the app's OWN config file. Databricks Apps reads it at runtime.
+#
+# Do NOT put Asset Bundle variables (${var.x}) in this file. The bundle renders
+# only databricks.yml, so this file is uploaded as-is. If you write...
+#
+#   env:
+#     - name: APP_ENV
+#       value: ${var.env}
+#
+# ...the app receives the LITERAL string "${var.env}", unsubstituted.
+#
+# Instead, put variable-backed env vars in resources.apps.<name>.config.env in
+# databricks.yml. ${var.x} is substituted there, and that config OVERRIDES this
+# file's env when you deploy with `databricks bundle deploy`.
+#
+# So this file only carries the startup command (the bundle overrides it too,
+# but keeping it here makes the manual `databricks apps deploy` path work).
+command: ["python", "app.py"]

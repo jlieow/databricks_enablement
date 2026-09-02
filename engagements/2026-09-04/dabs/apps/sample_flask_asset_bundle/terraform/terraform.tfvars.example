@@ -1,0 +1,18 @@
+# Copy to terraform.tfvars and fill in. Do not commit real secret values.
+profile = "<your-databricks-cli-profile>"
+
+# Catalogs created: <catalog_prefix>_<env> for each environment below.
+# Defaults produce enablement_sfab_dev and enablement_sfab_prod.
+# catalog_prefix = "enablement_sfab"
+# environments   = ["dev", "prod"]
+
+# secret_value = "sk-live-..."   # better: export TF_VAR_secret_value=...
+
+# After the first `databricks bundle deploy`, get the app's service principal
+# application id (`databricks apps get sample-flask-asset-bundle -o json`) and
+# add it here, then re-run `terraform apply`. Or list a group the app SP is in.
+# These principals are granted read in EVERY environment.
+secret_readers = [
+  # "11111111-2222-3333-4444-555555555555",
+  # "srm_data_readers_dev",
+]
