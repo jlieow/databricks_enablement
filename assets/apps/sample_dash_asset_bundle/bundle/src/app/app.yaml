@@ -1,0 +1,11 @@
+# src/app/app.yaml is the app's OWN config file, read by Databricks Apps at
+# runtime. It sits at source_code_path (../src/app, per resources/app.yml), so it
+# is synced as-is and is NOT processed for bundle variable substitution.
+#
+# Do NOT put ${var.*} here - it would reach the app as a literal string. Keep
+# variable-backed env vars in resources/app.yml (config.env), which is bundle
+# configuration (substituted) and also overrides this file's env at deploy time.
+#
+# So this file only carries the startup command, which keeps a manual
+# `databricks apps deploy` path working too.
+command: ["python", "app.py"]

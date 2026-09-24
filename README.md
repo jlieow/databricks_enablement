@@ -13,6 +13,7 @@ Engagements are named by session date.
 | [`engagements/2026-08-04/`](engagements/2026-08-04/) | Client (ad-spend) data consolidation for a marketing agency: Auto Loader → medallion → RLS → cost → Genie → dashboard | Complete |
 | [`engagements/2026-08-24/`](engagements/2026-08-24/) | Scientific publisher: connector-based ingestion (CSV upload + Google Drive connector) → medallion → internal campaign-engagement report on AI/BI dashboard + Genie, with cost readout and a governance foundation | Complete |
 | [`engagements/2026-09-04/`](engagements/2026-09-04/) | Health authority: patient encounter medallion platform (outpatient visits, inpatient admissions, lab results) with classical risk-stratification model, clinical-note extraction, academic literature retrieval agent, batch serving to PostgreSQL, Genie, dashboards | Complete |
+| [`engagements/2026-09-29/`](engagements/2026-09-29/) | Databricks Apps with Asset Bundles: deploy a Plotly Dash app via DABs, wire the app `resources` block (job + SQL warehouse), offload the chart query to the warehouse, trigger a job from a button, schedule start/stop, and deploy per-user so a class shares one workspace. Driven by [`assets/apps/sample_dash_asset_bundle/`](assets/apps/sample_dash_asset_bundle/) | Complete |
 
 Start with each engagement's `AGENDA.md`, which maps agenda items to files and covers setup,
 running order and the gotchas.
@@ -22,6 +23,15 @@ running order and the gotchas.
 | Path | For |
 | --- | --- |
 | [`shared/prework.md`](shared/prework.md) | Pre-session setup (Free Edition account, test notebook). Same for every engagement |
+
+## Assets
+
+Reusable, runnable assets referenced by one or more engagements. Kept separate so a single
+maintained copy serves every session that uses it.
+
+| Path | What |
+| --- | --- |
+| [`assets/apps/sample_dash_asset_bundle/`](assets/apps/sample_dash_asset_bundle/) | Databricks App (Plotly Dash) packaged as an Asset Bundle: app `resources` block (job + SQL warehouse), warehouse-offloaded chart query, button-triggered job, scheduled start/stop, per-user deploy. Used by [`engagements/2026-09-29/`](engagements/2026-09-29/) |
 
 ## Adding a new engagement
 

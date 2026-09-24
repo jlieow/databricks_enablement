@@ -1,0 +1,32 @@
+# databricks.yml - kept as small as it can possibly be, on purpose.
+#
+# Everything that CAN move out of this file HAS moved out. Each logical section
+# of the bundle lives in its own file, and `include:` points at each one by an
+# explicit path (specific files, not globs like `resources/*.yml`) so the whole
+# layout is legible at a glance:
+#
+#     config/variables.yml   ->  the `variables:` block
+#     resources/app.yml      ->  a `resources:` block (the Dash app)
+#     resources/job.yml      ->  a `resources:` block (scheduled start/stop jobs)
+#     config/targets.yml     ->  the `targets:` block (dev / prod)
+#     config/sync.yml        ->  the `sync:` block (excludes local-only files)
+#
+# Source code lives under src/, one subdir per resource type (the Databricks-
+# recommended layout): src/app/ is the app (source_code_path points there),
+# src/jobs/ holds the job notebook. Keeping them as siblings means the app root
+# never swallows the job code.
+#
+# At deploy time the CLI merges all the files into a single configuration before
+# doing anything, so the split is purely organisational - the deployed result is
+# identical to one big databricks.yml.
+bundle:
+  name: sample_dash_asset_bundle
+
+# Paths here are relative to THIS file (the bundle root). Order does not matter;
+# the merge is by key, not by file position.
+include:
+  - config/variables.yml
+  - resources/app.yml
+  - resources/job.yml
+  - config/targets.yml
+  - config/sync.yml

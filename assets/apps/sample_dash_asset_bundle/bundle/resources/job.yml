@@ -1,0 +1,106 @@
+# resources/job.yml
+#
+# A SECOND `resources:` block - jobs this time - in its own file. Two files both
+# contribute to `resources:` (app.yml -> the app, job.yml -> these jobs) and the
+# CLI merges them by key. Splitting resources by type keeps a growing bundle
+# legible.
+#
+# TWO jobs share ONE notebook (../src/jobs/app_lifecycle.py), which starts or
+# stops the app based on its `action` parameter. Why two jobs and not one: a
+# job has a single schedule, so a "start at 08:00" cron and a "stop at 18:00"
+# cron must be two separate jobs. Each fixes `action` via its parameter default,
+# so a scheduled run (which passes no params) does the right thing, and you can
+# still run either by hand (`databricks bundle run app_start` / `app_stop`).
+#
+# GOTCHA (same as source_code_path): notebook_path in an INCLUDED file resolves
+# from THIS file's directory (resources/), so it is `../src/jobs/app_lifecycle.py`
+# (job source is a sibling of the app source under src/, never inside src/app).
+#
+# Schedules use the timezone from ${var.schedule_timezone} (config/variables.yml).
+# NOTE: pause_status is deliberately OMITTED. In development mode the CLI both
+# prefixes job names with "[dev user]" AND auto-pauses schedules, so the dev
+# deploy never fires these on the clock (trigger dev runs by hand to test); the
+# prod deploy leaves them UNPAUSED so they actually run at 08:00 / 18:00. Setting
+# pause_status explicitly would defeat that per-target default.
+resources:
+  jobs:
+    # The job the app declares as a RESOURCE (see resources/app.yml) and triggers
+    # from a button. It does nothing but run a Python script that prints the app
+    # name it was handed.
+    #
+    # The app name comes in as the job-level `app_name` parameter. Its DEFAULT is
+    # ${var.app_name} (so a manual `databricks bundle run app_name_demo` still
+    # prints the real name), and the app OVERRIDES it at run time by passing its
+    # own APP_NAME when it calls jobs.run_now. The task forwards the parameter to
+    # the script via `{{job.parameters.app_name}}`.
+    #
+    # IMPORTANT - the default is ${var.app_name}, NOT
+    # ${resources.apps.sample_dash_asset_bundle.name}. The app declares THIS job
+    # as a resource (app -> job), so a job -> app back-reference would form a
+    # dependency cycle the CLI rejects. Reading the shared variable instead keeps
+    # the dependency one-directional.
+    #
+    # spark_python_task runs a plain .py file (not a notebook) and passes
+    # `parameters:` as command-line args, which the script reads from argv. On
+    # serverless compute a spark_python_task needs an `environments:` block plus
+    # an `environment_key` on the task (a notebook_task does not); the empty spec
+    # just requests the default serverless environment.
+    app_name_demo:
+      name: sample_dash_asset_bundle_app_name_demo
+      parameters:
+        - name: app_name
+          default: ${var.app_name}
+      tasks:
+        - task_key: print_app_name
+          environment_key: default
+          spark_python_task:
+            python_file: ../src/jobs/triggered_by_app.py
+            parameters:
+              - "{{job.parameters.app_name}}"
+      environments:
+        - environment_key: default
+          spec:
+            client: "3"
+
+    app_start:
+      name: sample_dash_asset_bundle_start
+      parameters:
+        - name: action
+          default: start
+      schedule:
+        quartz_cron_expression: "0 0 8 * * ?"   # every day at 08:00
+        timezone_id: ${var.schedule_timezone}
+      tasks:
+        - task_key: set_app_state
+          # No cluster block -> runs on serverless compute.
+          notebook_task:
+            notebook_path: ../src/jobs/app_lifecycle.py
+            base_parameters:
+              action: "{{job.parameters.action}}"
+              # Always the deployed app name for the active target.
+              app_name: ${resources.apps.sample_dash_asset_bundle.name}
+              # Env values to re-apply on `start`. Wired from the SAME variables
+              # the app's config.env uses (resources/app.yml), so the VALUES stay
+              # single-sourced in config/targets.yml - only the key->var mapping
+              # is repeated, because the Apps API applies env at deploy time and
+              # masks values on read (so a start must re-supply them). ${var.*}
+              # is substituted at deploy time.
+              env_json: '[{"name": "APP_ENV", "value": "${var.env}"}, {"name": "APP_TITLE", "value": "${var.app_title}"}]'
+
+    app_stop:
+      name: sample_dash_asset_bundle_stop
+      parameters:
+        - name: action
+          default: stop
+      schedule:
+        quartz_cron_expression: "0 0 18 * * ?"   # every day at 18:00
+        timezone_id: ${var.schedule_timezone}
+      tasks:
+        - task_key: set_app_state
+          notebook_task:
+            notebook_path: ../src/jobs/app_lifecycle.py
+            base_parameters:
+              action: "{{job.parameters.action}}"
+              app_name: ${resources.apps.sample_dash_asset_bundle.name}
+              # stop ignores env_json, but keep the task identical to app_start.
+              env_json: '[{"name": "APP_ENV", "value": "${var.env}"}, {"name": "APP_TITLE", "value": "${var.app_title}"}]'

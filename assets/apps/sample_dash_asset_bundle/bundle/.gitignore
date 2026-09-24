@@ -1,0 +1,9 @@
+# Databricks CLI bundle state.
+.databricks/
+
+# src/app/local.env holds the demo's LOCAL values and is meant to be COMMITTED
+# to git, but a repo-wide `**/*.env` rule ignores it. Re-include just this file.
+# (It carries no secrets - only the "local" flavour of the values the targets
+# set.) Note: being committed to git is separate from being deployed - a
+# `sync.exclude` in config/sync.yml keeps it out of the app upload.
+!src/app/local.env

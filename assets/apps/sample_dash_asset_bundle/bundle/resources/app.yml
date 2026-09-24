@@ -1,0 +1,77 @@
+# resources/app.yml
+#
+# The top-level `resources:` block. This file defines the app and nothing else.
+#
+# IMPORTANT - relative paths in an INCLUDED file resolve from THIS file's own
+# directory (resources/), not from databricks.yml. That is why source_code_path
+# is `../src/app`: up out of resources/ and into the app's source folder.
+#
+# It points at src/app (the app's OWN directory), NOT src/. Only files under
+# source_code_path become the app's code, so the app must have its own subdir -
+# sibling job code in src/jobs is then never uploaded as part of the app. This
+# is the Databricks-recommended layout (its `databricks apps` generation also
+# defaults to src/app).
+resources:
+  apps:
+    sample_dash_asset_bundle:
+      # Single-sourced via ${var.app_name} (config/variables.yml, per-target value
+      # in config/targets.yml) so the app_name_demo job can reference the SAME
+      # value without pointing back at this app (which would cycle).
+      name: ${var.app_name}
+      description: "A Plotly Dash app deployed with Databricks Asset Bundles"
+      source_code_path: ../src/app
+
+      # The app's OWN resources - the dependencies that show up in the app's
+      # "Resources" tab in the UI. Declaring one here both (a) lists it on the
+      # app and (b) grants the app's service principal the given permission on
+      # that resource. This is a DIFFERENT "resources" from the top-level bundle
+      # `resources:` block; this one is nested under the app.
+      #
+      # Here we attach the app_name_demo job with CAN_MANAGE_RUN, so the app's
+      # service principal is allowed to trigger it. `${resources.jobs.*.id}`
+      # resolves at deploy time (the CLI deploys the job first, then the app), so
+      # the app is wired to the job without hard-coding a job id.
+      resources:
+        - name: app-name-demo-job
+          description: "The demo job this app is allowed to trigger."
+          job:
+            id: ${resources.jobs.app_name_demo.id}
+            permission: CAN_MANAGE_RUN
+        # An EXISTING SQL warehouse the app runs its chart query on. CAN_USE lets
+        # the app SP execute statements against it. The id comes from
+        # ${var.warehouse_id} (passed at deploy time), NOT from a warehouse this
+        # bundle creates: Databricks Free Edition allows only one warehouse per
+        # account, so the bundle references the pre-provisioned "Serverless
+        # Starter Warehouse" instead of creating a second one.
+        - name: app-warehouse
+          description: "The SQL warehouse the app offloads its chart query to."
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE
+
+      config:
+        command: ["python", "app.py"]
+
+        # ${var.*} and ${resources.*} ARE substituted here, because this is bundle
+        # configuration (pulled in via include:) and the CLI renders it at deploy
+        # time. Variables come from config/variables.yml (per-target values in
+        # config/targets.yml); the JOB_ID reference resolves to the numeric id of
+        # the job created above.
+        env:
+          - name: APP_ENV
+            value: ${var.env}
+          - name: APP_TITLE
+            value: ${var.app_title}
+          # The app's own name, handed to the job as a run parameter when the
+          # button triggers it. Same ${var.app_name} the job defaults to.
+          - name: APP_NAME
+            value: ${var.app_name}
+          # The numeric id of app_name_demo, so app.py can call jobs.run_now on
+          # it. The app is allowed to (CAN_MANAGE_RUN, granted by the resource
+          # binding above); this env var just tells it WHICH job.
+          - name: JOB_ID
+            value: ${resources.jobs.app_name_demo.id}
+          # The warehouse id app.py runs its chart query on (via the Statement
+          # Execution API). CAN_USE is granted by the resource binding above.
+          - name: WAREHOUSE_ID
+            value: ${var.warehouse_id}

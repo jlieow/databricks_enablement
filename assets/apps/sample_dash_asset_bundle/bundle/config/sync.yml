@@ -1,0 +1,18 @@
+# config/sync.yml
+#
+# The top-level `sync:` block, in its own file like every other section.
+#
+# src/app/local.env and src/app/run_local.sh sit inside the app root
+# (source_code_path is ../src/app), so by default they would be uploaded with
+# the app's code on every deploy. Both are laptop-only files, so exclude them
+# from the bundle sync - then they are never uploaded and never become part of
+# the deployed app, while staying right next to app.py for local runs.
+#
+# GOTCHA (same one as source_code_path): a relative path in an INCLUDED file
+# resolves from THIS file's directory (config/), not the bundle root. So the
+# patterns are `../src/app/...` - up out of config/ and into src/app. Writing
+# `src/app/local.env` here silently matches nothing (it looks for config/src/...).
+sync:
+  exclude:
+    - ../src/app/local.env
+    - ../src/app/run_local.sh

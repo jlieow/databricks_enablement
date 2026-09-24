@@ -1,0 +1,44 @@
+# config/targets.yml
+#
+# The top-level `targets:` block. This file does ONE job: describe each
+# deployable environment and give the variables their per-target values.
+#
+# The host comes from your Databricks CLI profile (`-p <profile>`); pin one
+# here with `workspace: { host: https://... }` if you prefer.
+targets:
+  dev:
+    mode: development
+    default: true
+    variables:
+      # Per-target values feeding ${var.*}. Each must be NON-EMPTY - Databricks
+      # Apps rejects an empty env value, so any variable wired into config.env
+      # cannot be "".
+      env: dev
+      # PER-USER app name, so several people can clone this bundle and deploy it
+      # into the SAME workspace without colliding. Development mode already gives
+      # jobs, the warehouse, and the workspace path a per-user "[dev <user>]"
+      # prefix - but it does NOT namespace app names, so a fixed name would clash.
+      # ${workspace.current_user.id} is the numeric user id: always a valid app
+      # name token (apps allow only lowercase letters/digits/hyphens, <=30 chars,
+      # which rules out short_name - it has underscores) and unique per person.
+      # app_name also feeds APP_NAME (config.env) and the demo job's parameter,
+      # single-sourced.
+      app_name: sample-dash-${workspace.current_user.id}
+      # The heading stays human-readable and names the owner, so a shared
+      # workspace shows whose app is whose even though the app id is opaque.
+      app_title: "Dash Asset Bundle (dev - ${workspace.current_user.short_name})"
+    presets:
+      tags:
+        environment: ${var.env}
+
+  prod:
+    mode: production
+    workspace:
+      root_path: /.dabs/${bundle.name}
+    variables:
+      env: prod
+      app_name: sample-dash-bundle-prod
+      app_title: "Dash Asset Bundle (prod)"
+    presets:
+      tags:
+        environment: ${var.env}

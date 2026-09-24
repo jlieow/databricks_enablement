@@ -1,0 +1,39 @@
+# config/variables.yml
+#
+# The top-level `variables:` block, lifted out of databricks.yml. This file
+# does ONE job: declare the variables the bundle uses. Declaring a variable
+# here is what makes `${var.<name>}` resolve to a real value everywhere else
+# (resources/app.yml references them, config/targets.yml supplies per-target
+# values). A variable that is referenced but never declared here stays in the
+# output as the literal string `${var.<name>}`.
+variables:
+  env:
+    description: Logical environment name passed to the app (dev, staging, prod).
+    default: dev
+  app_name:
+    description: >-
+      The deployed app name. Single-sourced here (rather than as a literal on
+      each target's app resource) so both the app's `name` AND the app_name_demo
+      job's parameter can use the SAME value via ${var.app_name}. The job cannot
+      use ${resources.apps.*.name} because the app declares that job as a
+      resource - a back-reference would create an app<->job dependency cycle.
+    default: sample-dash-bundle
+  app_title:
+    description: Title rendered in the Dash app's heading, so a different value per target is visible in the UI.
+    default: "Dash Asset Bundle"
+  warehouse_id:
+    description: >-
+      Id of an EXISTING SQL warehouse the app runs its chart query on. On
+      Databricks Free Edition every workspace ships with exactly one warehouse
+      (the "Serverless Starter Warehouse") and the account cannot create a
+      second, so this bundle references a warehouse rather than creating one.
+      Pass it at deploy time, e.g.
+      --var="warehouse_id=$(databricks warehouses list -o json | python3 -c 'import sys,json;print(json.load(sys.stdin)[0][\"id\"])')".
+      No default: the app's warehouse binding needs a real id, so deploys fail
+      fast (clear "no value for variable warehouse_id" error) if it is omitted.
+  schedule_timezone:
+    description: >-
+      IANA timezone id for the app_start (08:00) / app_stop (18:00) schedules,
+      e.g. America/New_York, Europe/London, Asia/Singapore, UTC. Change this to
+      your business hours' timezone.
+    default: America/New_York
