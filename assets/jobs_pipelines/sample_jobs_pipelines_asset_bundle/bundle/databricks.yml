@@ -1,0 +1,107 @@
+bundle:
+  name: sample_jobs_pipelines_asset_bundle
+
+# ---------------------------------------------------------------------------
+# One Asset Bundle that deploys BOTH jobs and Lakeflow Declarative Pipelines,
+# and shows the three ways they relate:
+#
+#   1. A standalone JOB           - two spark_python tasks (ingest -> transform).
+#   2. Standalone PIPELINES       - one SQL, one Python, each self-contained.
+#   3. An ORCHESTRATED job        - a job whose middle task is a pipeline_task
+#                                    that triggers a pipeline, with a spark_python
+#                                    ingest before it and a summarize after it.
+#
+# A single `databricks bundle deploy` provisions the Unity Catalog catalog,
+# every schema, both jobs, and all three pipelines.
+# ---------------------------------------------------------------------------
+
+include:
+  - resources/*.yml
+
+# ---------------------------------------------------------------------------
+# STEP 1 - DECLARE every variable here, at the top level.
+#
+# A variable given a value only under `targets.<name>.variables` (without also
+# appearing in this block) is treated as "not defined", and any `${var.<name>}`
+# that references it is left in the output as a literal string. Declaring it
+# here is what turns `${var.catalog}` into a real value.
+# ---------------------------------------------------------------------------
+variables:
+  catalog:
+    description: Unity Catalog catalog the bundle creates; every job and pipeline writes into it.
+    default: sample_jobs_pipelines_demo
+  schema:
+    description: Base schema name; each resource appends a suffix (_job, _sql, _python, _orchestrated).
+    default: demo
+  row_count:
+    description: Number of sample rows the standalone job's ingest task generates.
+    default: "100"
+
+resources:
+  # -------------------------------------------------------------------------
+  # The catalog and every schema are created by the bundle itself - no
+  # Terraform. DABs supports `catalogs` and `schemas` as first-class resources,
+  # so one deploy provisions the Unity Catalog objects AND the jobs/pipelines.
+  # A schema references the catalog with ${resources...}, which also tells the
+  # bundle to create the catalog first.
+  #
+  # Each pipeline publishes into its OWN schema: a Delta table can only be owned
+  # by one pipeline, so separate schemas keep the two standalone pipelines'
+  # tables from colliding.
+  # -------------------------------------------------------------------------
+  catalogs:
+    demo_catalog:
+      name: ${var.catalog}
+      comment: "Catalog for the sample_jobs_pipelines_asset_bundle demo"
+
+  schemas:
+    job_schema:
+      catalog_name: ${resources.catalogs.demo_catalog.name}
+      name: ${var.schema}_job
+      comment: "Standalone job's output tables"
+
+    sql_schema:
+      catalog_name: ${resources.catalogs.demo_catalog.name}
+      name: ${var.schema}_sql
+      comment: "SQL pipeline's tables"
+
+    python_schema:
+      catalog_name: ${resources.catalogs.demo_catalog.name}
+      name: ${var.schema}_python
+      comment: "Python pipeline's tables"
+
+    orchestrated_schema:
+      catalog_name: ${resources.catalogs.demo_catalog.name}
+      name: ${var.schema}_orchestrated
+      comment: "Orchestrated job + its pipeline share this schema"
+
+targets:
+  # -------------------------------------------------------------------------
+  # STEP 2 - Give the declared variables their per-target VALUES.
+  #
+  # `dev` deploys under your own user with a "[dev <you>]" name prefix and
+  # dev-prefixes every schema, so it never competes with the shared prod copy.
+  # The host comes from your Databricks CLI profile passed with -p, so it is not
+  # pinned here (pinning it must byte-match the profile's host exactly).
+  # -------------------------------------------------------------------------
+  dev:
+    mode: development
+    default: true
+    workspace:
+      # mode: development requires a root_path unique per user, so it must be
+      # home-relative (~/) or otherwise contain the username.
+      root_path: ~/.dabs/${bundle.name}
+    variables:
+      catalog: sample_jobs_pipelines_demo
+      schema: demo
+      row_count: "100"
+
+  prod:
+    mode: production
+    workspace:
+      host: https://<your-workspace-host>
+      root_path: /.dabs/${bundle.name}
+    variables:
+      catalog: sample_jobs_pipelines_demo
+      schema: prod
+      row_count: "100000"

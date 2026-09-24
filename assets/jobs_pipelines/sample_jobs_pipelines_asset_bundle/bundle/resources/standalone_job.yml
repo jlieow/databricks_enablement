@@ -1,0 +1,42 @@
+resources:
+  jobs:
+    # -----------------------------------------------------------------------
+    # RESOURCE 1 - a standalone two-task JOB. No pipeline involved: this is the
+    # plain "run Python on serverless, one task after another" pattern.
+    #
+    # The task parameters mix two kinds of reference:
+    #   - ${var.row_count}                       - a plain VARIABLE passthrough.
+    #   - ${resources.schemas.job_schema.name}   - a RESOURCE reference, so the
+    #     job writes into the exact schema the bundle created (dev-prefixed in
+    #     `mode: development`), keeping dev and prod consistent end to end.
+    # -----------------------------------------------------------------------
+    standalone_job:
+      name: sample-standalone-job
+      description: "Two-task job (ingest -> transform) showing bundle variables resolving into task parameters"
+
+      tasks:
+        - task_key: ingest
+          spark_python_task:
+            python_file: ../src/job/ingest.py
+            parameters:
+              - "--catalog=${resources.catalogs.demo_catalog.name}"
+              - "--schema=${resources.schemas.job_schema.name}"
+              - "--row-count=${var.row_count}"
+          environment_key: default
+
+        # transform runs only after ingest succeeds - depends_on wires the DAG.
+        - task_key: transform
+          depends_on:
+            - task_key: ingest
+          spark_python_task:
+            python_file: ../src/job/transform.py
+            parameters:
+              - "--catalog=${resources.catalogs.demo_catalog.name}"
+              - "--schema=${resources.schemas.job_schema.name}"
+          environment_key: default
+
+      # Serverless compute: no cluster to size or start.
+      environments:
+        - environment_key: default
+          spec:
+            client: "3"

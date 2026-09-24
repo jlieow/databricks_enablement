@@ -32,6 +32,7 @@ maintained copy serves every session that uses it.
 | Path | What |
 | --- | --- |
 | [`assets/apps/sample_dash_asset_bundle/`](assets/apps/sample_dash_asset_bundle/) | Databricks App (Plotly Dash) packaged as an Asset Bundle: app `resources` block (job + SQL warehouse), warehouse-offloaded chart query, button-triggered job, scheduled start/stop, per-user deploy. Used by [`engagements/2026-09-29/`](engagements/2026-09-29/) |
+| [`assets/jobs_pipelines/sample_jobs_pipelines_asset_bundle/`](assets/jobs_pipelines/sample_jobs_pipelines_asset_bundle/) | Jobs and Lakeflow Declarative Pipelines in one Asset Bundle: a standalone two-task job, standalone SQL + Python pipelines, and a job that orchestrates a pipeline via a `pipeline_task` (ingest → pipeline → summarize). Bundle creates the catalog + schemas (`direct` engine); serverless; per-user deploy. Needs a workspace where catalogs can be created (not Free Edition — the README covers the Free Edition variant) |
 
 ## Adding a new engagement
 

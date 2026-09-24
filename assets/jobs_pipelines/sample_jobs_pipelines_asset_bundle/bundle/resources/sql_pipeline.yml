@@ -1,0 +1,20 @@
+resources:
+  pipelines:
+    # -----------------------------------------------------------------------
+    # RESOURCE 2 - a standalone SQL Lakeflow Declarative Pipeline. Self-contained:
+    # it generates its own sample rows and aggregates them, so it runs end-to-end
+    # with no pre-existing table.
+    # -----------------------------------------------------------------------
+    sql_customer_pipeline:
+      name: sql-customer-pipeline-${bundle.target}
+      catalog: ${resources.catalogs.demo_catalog.name}
+      # Its own schema (resource reference) so its tables never collide with the
+      # Python pipeline's - a table can only be owned by one pipeline.
+      schema: ${resources.schemas.sql_schema.name}
+      serverless: true
+
+      # Bundle pipelines reference local source files through libraries.file.
+      # The path is relative to this resources/ directory.
+      libraries:
+        - file:
+            path: ../src/pipelines/sql/transformations.sql

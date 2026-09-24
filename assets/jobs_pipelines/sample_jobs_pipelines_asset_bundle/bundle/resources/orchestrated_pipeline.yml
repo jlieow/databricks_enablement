@@ -1,0 +1,28 @@
+resources:
+  pipelines:
+    # -----------------------------------------------------------------------
+    # RESOURCE 4 - the pipeline the ORCHESTRATED job drives (see
+    # orchestrated_job.yml). Unlike the two standalone pipelines, this one is NOT
+    # self-contained: it reads an `orders_raw` table that the job's ingest task
+    # writes first, then publishes `customer_summary` from it. That is the whole
+    # point of the orchestration - a job task produces the input, the pipeline
+    # transforms it.
+    #
+    # `configuration` values are passed into the pipeline and read in the source
+    # with spark.conf.get(...), so the pipeline learns which catalog/schema to
+    # read from without hard coding anything. This is the pipeline equivalent of
+    # the job's task `parameters`.
+    # -----------------------------------------------------------------------
+    orchestrated_pipeline:
+      name: orchestrated-customer-pipeline-${bundle.target}
+      catalog: ${resources.catalogs.demo_catalog.name}
+      schema: ${resources.schemas.orchestrated_schema.name}
+      serverless: true
+
+      configuration:
+        source_catalog: ${resources.catalogs.demo_catalog.name}
+        source_schema: ${resources.schemas.orchestrated_schema.name}
+
+      libraries:
+        - file:
+            path: ../src/orchestrated/pipeline.py

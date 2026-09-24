@@ -1,0 +1,17 @@
+resources:
+  pipelines:
+    # -----------------------------------------------------------------------
+    # RESOURCE 3 - a standalone Python Lakeflow Declarative Pipeline, the Python
+    # counterpart to the SQL pipeline. Also self-contained.
+    # -----------------------------------------------------------------------
+    python_customer_pipeline:
+      name: python-customer-pipeline-${bundle.target}
+      catalog: ${resources.catalogs.demo_catalog.name}
+      # Own schema (resource reference) so its tables never collide with the SQL
+      # pipeline's.
+      schema: ${resources.schemas.python_schema.name}
+      serverless: true
+
+      libraries:
+        - file:
+            path: ../src/pipelines/python/transformations.py
