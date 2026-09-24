@@ -34,6 +34,29 @@ maintained copy serves every session that uses it.
 | [`assets/apps/sample_dash_asset_bundle/`](assets/apps/sample_dash_asset_bundle/) | Databricks App (Plotly Dash) packaged as an Asset Bundle: app `resources` block (job + SQL warehouse), warehouse-offloaded chart query, button-triggered job, scheduled start/stop, per-user deploy. Used by [`engagements/2026-09-29/`](engagements/2026-09-29/) |
 | [`assets/jobs_pipelines/sample_jobs_pipelines_asset_bundle/`](assets/jobs_pipelines/sample_jobs_pipelines_asset_bundle/) | Jobs and Lakeflow Declarative Pipelines in one Asset Bundle: a standalone two-task job, standalone SQL + Python pipelines, and a job that orchestrates a pipeline via a `pipeline_task` (ingest → pipeline → summarize). Bundle creates the catalog + schemas (`direct` engine); serverless; per-user deploy. Needs a workspace where catalogs can be created (not Free Edition — the README covers the Free Edition variant) |
 
+## Cloning a single asset
+
+To pull down just one folder (e.g. `assets/jobs_pipelines/sample_jobs_pipelines_asset_bundle`)
+instead of the whole repo, use git's sparse checkout:
+
+```bash
+# 1. Clone without checking out files (partial + no checkout)
+git clone --no-checkout --filter=blob:none \
+  https://github.com/jlieow/databricks_enablement.git
+cd databricks_enablement
+
+# 2. Restrict the working tree to the folder you want
+git sparse-checkout set assets/jobs_pipelines/sample_jobs_pipelines_asset_bundle
+
+# 3. Check out the working tree (only that folder appears)
+git checkout
+```
+
+- `--filter=blob:none` skips downloading file contents outside your sparse path. Drop it for
+  full local history.
+- Add more paths later with `git sparse-checkout add <another/path>`, or restore the full repo
+  with `git sparse-checkout disable`.
+
 ## Adding a new engagement
 
 1. `cp -R engagements/2026-08-04 engagements/<new-date>` (or copy the closest existing one).
